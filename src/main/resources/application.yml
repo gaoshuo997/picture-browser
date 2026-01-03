@@ -1,0 +1,22 @@
+server:
+  port: 8088
+  
+spring:
+  datasource:
+    url: jdbc:postgresql://192.168.0.108:5432/picture-browser
+    username: postgres
+    password: admin1234
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update # 开发环境使用，自动创建/更新数据表
+    show-sql: true # 打印 SQL 语句，方便调试
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect # 适配 PostgreSQL 的 Hibernate 方言
+
+jwt:
+  secret-key: YTV1ZEFUTm0vQUg0QkM3WVNCUTVhbFM0NTJQMllGVlVxbXRZUFhIdmc1OD0=
+  expire-time: 7200000
+
+
