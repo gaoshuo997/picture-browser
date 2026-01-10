@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+  <property name="log.dir" value="logs"/>
+  <property name="LOG_FILE" value="./logs/picture.log"/>
+
+  <springProfile name="dev">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+        <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符-->
+        <pattern>[%date{yyyy-MM-dd HH:mm:ss.SSS}][%X{TrackingId}][%thread][%level][%class][%line]:%message%n
+        </pattern>
+      </encoder>
+    </appender>
+
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.apache" level="WARN"/>
+    <logger name="org.hibernate" level="WARN"/>
+
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+    </root>
+  </springProfile>
+
+  <springProfile name="ci">
+    <appender name="ROLLING-FILE"
+      class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <encoder>
+        <pattern>[%date{yyyy-MM-dd HH:mm:ss.SSS}][%X{TrackingId}][%thread][%level][%class][%line]:%message%n
+        </pattern>
+      </encoder>
+      <file>${LOG_FILE}</file>
+      <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+        <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+        <timeBasedFileNamingAndTriggeringPolicy
+          class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+          <maxFileSize>10MB</maxFileSize>
+        </timeBasedFileNamingAndTriggeringPolicy>
+      </rollingPolicy>
+    </appender>
+
+    <logger name="org.springframework" level="ERROR"/>
+    <logger name="springfox.documentation" level="ERROR"/>
+    <logger name="springfox.bean.validators" level="ERROR"/>
+    <logger name="com.netflix" level="ERROR"/>
+    <logger name="org.apache" level="ERROR"/>
+    <logger name="org.quartz" level="ERROR"/>
+    <logger name="org.hibernate" level="ERROR"/>
+    <logger name="com.mongodb.diagnostics.logging" level="ERROR"/>
+
+    <root level="INFO">
+      <appender-ref ref="ROLLING-FILE"/>
+    </root>
+  </springProfile>
+
+  <springProfile name="qa">
+    <appender name="ROLLING-FILE"
+      class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <encoder>
+        <pattern>[%date{yyyy-MM-dd HH:mm:ss.SSS}][%X{TrackingId}][%thread][%level][%class][%line]:%message%n
+        </pattern>
+      </encoder>
+      <file>${LOG_FILE}</file>
+      <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+        <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+        <timeBasedFileNamingAndTriggeringPolicy
+          class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+          <maxFileSize>10MB</maxFileSize>
+        </timeBasedFileNamingAndTriggeringPolicy>
+      </rollingPolicy>
+    </appender>
+
+    <logger name="org.springframework" level="ERROR"/>
+    <logger name="springfox.documentation" level="ERROR"/>
+    <logger name="springfox.bean.validators" level="ERROR"/>
+    <logger name="com.netflix" level="ERROR"/>
+    <logger name="org.apache" level="ERROR"/>
+    <logger name="org.quartz" level="ERROR"/>
+    <logger name="org.hibernate" level="ERROR"/>
+    <logger name="com.mongodb.diagnostics.logging" level="ERROR"/>
+
+    <root level="INFO">
+      <appender-ref ref="ROLLING-FILE"/>
+    </root>
+  </springProfile>
+
+  <springProfile name="prod">
+    <appender name="ROLLING-FILE"
+      class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <encoder>
+        <pattern>[%date{yyyy-MM-dd HH:mm:ss.SSS}][%X{TrackingId}][%thread][%level][%class][%line]:%message%n
+        </pattern>
+      </encoder>
+      <file>${LOG_FILE}</file>
+      <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+        <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+        <timeBasedFileNamingAndTriggeringPolicy
+          class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+          <maxFileSize>10MB</maxFileSize>
+        </timeBasedFileNamingAndTriggeringPolicy>
+      </rollingPolicy>
+    </appender>
+
+    <logger name="org.springframework" level="ERROR"/>
+    <logger name="springfox.documentation" level="ERROR"/>
+    <logger name="springfox.bean.validators" level="ERROR"/>
+    <logger name="com.netflix" level="ERROR"/>
+    <logger name="org.apache" level="ERROR"/>
+    <logger name="org.quartz" level="ERROR"/>
+    <logger name="org.hibernate" level="ERROR"/>
+    <logger name="com.mongodb.diagnostics.logging" level="ERROR"/>
+
+    <root level="INFO">
+      <appender-ref ref="ROLLING-FILE"/>
+    </root>
+  </springProfile>
+
+</configuration>

@@ -33,12 +33,14 @@ public class GeneralExceptionHandler {
     @ExceptionHandler(ApplicationException.class)
     public ApplicationResponseEntity<ApplicationErrorResponseEntity> handleApplicationException(
             ApplicationException exception, HttpServletResponse response) {
-        response.setStatus(exception.getHttpStatusCode());
-        ApplicationResponseEntity<ApplicationErrorResponseEntity> res =
-                new ApplicationResponseEntity<>();
-        res.setActionStatus(ActionStatus.FAIL);
+//        response.setStatus(exception.getHttpStatusCode());
+//        ApplicationResponseEntity<ApplicationErrorResponseEntity> res =
+//                new ApplicationResponseEntity<>();
+//        res.setActionStatus(ActionStatus.FAIL);
+        return constructValidationErrorResponse(exception.getErrorCode(), exception.getMessage());
+
 //        res.setContent(mapperFacade.map(exception, ApplicationErrorResponseEntity.class));
-        return res;
+//        return res;
     }
 
     /**

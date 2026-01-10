@@ -1,5 +1,6 @@
 package com.jimmy.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jimmy.common.web.ApplicationResponseEntity;
 import com.jimmy.entity.SignUser;
 import com.jimmy.entity.UserInfo;
@@ -10,6 +11,7 @@ import com.jimmy.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -22,10 +24,10 @@ public class LoginController {
     private JwtTokenProvider jwtTokenProvider;
 
     @Resource
-    private UserService userService;
+    private SignUserService signUserService;
 
     @Resource
-    private SignUserService signUserService;
+    private StringRedisTemplate stringRedisTemplate;
 
     @ResponseBody
     @PostMapping(value = "/sign-up")
@@ -39,6 +41,12 @@ public class LoginController {
             resultMap.put("result", false);
             resultMap.put("message", "注册失败");
         }
+        Map<String, Object> extraClaims = new HashMap<>(2);
+        assert saved != null;
+        extraClaims.put("userId", saved.getId());
+        extraClaims.put("loginName", saved.getLoginName());
+        String token = jwtTokenProvider.generateToken(saved.getId(), extraClaims);
+        resultMap.put("token",token);
         ApplicationResponseEntity<Map<String, Object>> responseEntity = new ApplicationResponseEntity<>();
         responseEntity.setContent(resultMap);
         return responseEntity;
@@ -54,8 +62,9 @@ public class LoginController {
         return result;
     }
 
+    // token
     @ResponseBody
-    @RequestMapping(value = "/auth-token", method = RequestMethod.POST)
+    @PostMapping(value = "/auth-token")
     public ApplicationResponseEntity<Map<String, Object>> auth(HttpServletRequest request) {
         String token = jwtTokenProvider.resolveToken(request);
         Map<String, Object> content = new HashMap<>();
@@ -63,16 +72,13 @@ public class LoginController {
         content.put("message", "登录认证失败");
         if (token != null && jwtTokenProvider.validateToken(token)) {
             Long userId = jwtTokenProvider.getUserId(token);
-            UserInfo userInfo = userService.findById(userId);
+            SignUser signUser = signUserService.findSignUserById(userId);
             String checksum = jwtTokenProvider.getChecksum(token);
             if (checksum != null
-                    && userInfo != null
-                    && checksum.equals(userInfo.getChecksum())) {
+                    && signUser != null) {
                 content.put("result", true);
                 content.put("userId", userId);
-                content.put("userName", userInfo.getLoginName());
-//                content.put("companyId", jwtTokenProvider.getCompanyId(token));
-//                content.put("actions", jwtTokenProvider.getActions(token));
+                content.put("loginName", signUser.getLoginName());
                 content.put("message", "登录认证成功");
             }
         }

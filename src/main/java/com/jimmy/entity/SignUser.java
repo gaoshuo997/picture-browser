@@ -30,4 +30,7 @@ public class SignUser {
 
     @Column(name = "update_time")
     private Date updateTime;
+
+    @Column(name = "delete_flag")
+    private Integer deleteFlag = 0;
 }

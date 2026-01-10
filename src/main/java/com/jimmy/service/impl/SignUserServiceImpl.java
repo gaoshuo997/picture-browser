@@ -10,6 +10,7 @@ import com.jimmy.service.SignUserService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -28,17 +29,30 @@ public class SignUserServiceImpl implements SignUserService {
             throw new BadRequestException(BadReqExceptionMsg.SIGN_NUM_OVER.getCode(),
                     BadReqExceptionMsg.SIGN_NUM_OVER.getMessage(), BadReqExceptionMsg.SIGN_NUM_OVER.getMessage());
         }
-        Long countByLoginName = signUserRepository.countSignUsersByLoginNameIgnoreCase(req.getLoginName().trim());
+        Long countByLoginName = signUserRepository
+                .countSignUsersByLoginNameIgnoreCaseAndDeleteFlag(req.getLoginName().trim(),0);
         if (countByLoginName !=0 ){
             throw  new BadRequestException(BadReqExceptionMsg.SIGN_ALREADY_EXIST.getCode(),
                     BadReqExceptionMsg.SIGN_ALREADY_EXIST.getMessage(), BadReqExceptionMsg.SIGN_ALREADY_EXIST.getMessage());
         }
-        Long countByEmail = signUserRepository.countSignUsersByEmailIgnoreCase(req.getEmail().trim());
+        Long countByEmail = signUserRepository
+                .countSignUsersByEmailIgnoreCaseAndDeleteFlag(req.getEmail().trim(),0);
         if (countByEmail != 0){
             throw  new BadRequestException(BadReqExceptionMsg.SiGN_EMAIL_EXIST.getCode(),
                     BadReqExceptionMsg.SiGN_EMAIL_EXIST.getMessage(), BadReqExceptionMsg.SiGN_EMAIL_EXIST.getMessage());
         }
         SignUser signUser = signUserMapper.reqToEntity(req);
+        Date now = new Date();
+        signUser.setCreateTime(now);
+        signUser.setUpdateTime(now);
         return signUserRepository.save(signUser);
+    }
+
+    @Override
+    public SignUser findSignUserById(Long id) {
+        if (id != null){
+            return signUserRepository.findSignUsersByIdAndDeleteFlag(id,0);
+        }
+        return null;
     }
 }

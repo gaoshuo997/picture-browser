@@ -1,3 +1,37 @@
+spring:
+  application:
+    name: picture-browser
+  datasource:
+    url: jdbc:postgresql://192.168.0.108:5432/picture-browser
+    username: postgres
+    password: admin1234
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update # 开发环境使用，自动创建/更新数据表
+    show-sql: true # 打印 SQL 语句，方便调试
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect # 适配 PostgreSQL 的 Hibernate 方言
+
+  data:
+    redis:
+      host: 192.168.0.108
+      port: 6379
+      password: admin1234
+      database: 0
+      # 超时配置（Spring Boot 3.x 统一使用Duration格式，也兼容毫秒数值）
+      timeout: PT10S           # 连接超时时间（PT10S = 10秒，兼容写法：10000）
+      connect-timeout: PT5S    # 连接建立超时（3.x新增，独立于timeout)
+
+      lettuce:
+        shutdown-timeout: 100ms
+        pool:
+          max-active: 16               # 最大活跃连接数（生产环境建议16，默认8）
+          max-idle: 8                  # 最大空闲连接数（默认8）
+          min-idle: 2                  # 最小空闲连接数（3.x推荐设置≥2，默认0）
+          max-wait: PT2S               # 最大等待时间（PT2S=2秒，-1表示无限制）
+          time-between-eviction-runs: PT30S  # 空闲连接回收扫描间隔（3.x新增）
 
 
 
