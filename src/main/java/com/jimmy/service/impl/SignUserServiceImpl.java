@@ -8,6 +8,7 @@ import com.jimmy.repository.SignUserRepository;
 import com.jimmy.req.SignUserReq;
 import com.jimmy.service.SignUserService;
 import jakarta.annotation.Resource;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -21,6 +22,9 @@ public class SignUserServiceImpl implements SignUserService {
 
     @Resource
     SignUserMapper signUserMapper;
+
+    @Resource
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public SignUser insertSignUser(SignUserReq req) {
@@ -41,6 +45,7 @@ public class SignUserServiceImpl implements SignUserService {
             throw  new BadRequestException(BadReqExceptionMsg.SiGN_EMAIL_EXIST.getCode(),
                     BadReqExceptionMsg.SiGN_EMAIL_EXIST.getMessage(), BadReqExceptionMsg.SiGN_EMAIL_EXIST.getMessage());
         }
+        req.setPassword(passwordEncoder.encode(req.getPassword()));
         SignUser signUser = signUserMapper.reqToEntity(req);
         Date now = new Date();
         signUser.setCreateTime(now);
@@ -54,5 +59,19 @@ public class SignUserServiceImpl implements SignUserService {
             return signUserRepository.findSignUsersByIdAndDeleteFlag(id,0);
         }
         return null;
+    }
+
+    @Override
+    public SignUser checkSignUser(String loginUserName, String password) {
+        SignUser signUser = signUserRepository.findSignUserByLoginNameIgnoreCaseAndDeleteFlag(loginUserName, 0);
+        if (signUser == null){
+            throw new BadRequestException(BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getCode(),
+                    BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getMessage(), BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getMessage());
+        }
+        if (!passwordEncoder.matches(password, signUser.getPassword())){
+            throw new BadRequestException(BadReqExceptionMsg.PASSWORD_ERROR.getCode(),
+                    BadReqExceptionMsg.PASSWORD_ERROR.getMessage(), BadReqExceptionMsg.PASSWORD_ERROR.getMessage());
+        }
+        return signUser;
     }
 }

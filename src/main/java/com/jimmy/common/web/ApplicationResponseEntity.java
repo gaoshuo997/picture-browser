@@ -11,7 +11,7 @@ public class ApplicationResponseEntity<T> {
     private ActionStatus actionStatus = ActionStatus.SUCCESS;
 
     /**
-     * api response content.
+     * api response data.
      */
-    private T content;
+    private T data;
 }

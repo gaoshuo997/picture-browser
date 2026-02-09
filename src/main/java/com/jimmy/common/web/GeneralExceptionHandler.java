@@ -178,7 +178,7 @@ public class GeneralExceptionHandler {
         ApplicationResponseEntity<ApplicationErrorResponseEntity> responseEntity =
                 new ApplicationResponseEntity<>();
         responseEntity.setActionStatus(ActionStatus.FAIL);
-        responseEntity.setContent(errorResponseEntity);
+        responseEntity.setData(errorResponseEntity);
 
         return responseEntity;
     }

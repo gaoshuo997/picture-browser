@@ -15,4 +15,5 @@ public interface SignUserRepository extends JpaRepository<SignUser, Long> {
 
     SignUser findSignUsersByIdAndDeleteFlag(Long id, Integer deleteFlag);
 
+    SignUser findSignUserByLoginNameIgnoreCaseAndDeleteFlag(String loginName, Integer flag);
 }

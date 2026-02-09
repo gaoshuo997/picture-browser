@@ -17,6 +17,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addInterceptors(@Nonnull InterceptorRegistry registry) {
         registry.addInterceptor(loginValidatorInterceptor)
                 .addPathPatterns("/**")
-                .excludePathPatterns("/pic/sign-up","/pic/auth-token");
+                .excludePathPatterns("/auth/**","/public/**");
     }
 }

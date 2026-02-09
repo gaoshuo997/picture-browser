@@ -5,6 +5,7 @@ import com.jimmy.common.web.ApplicationResponseEntity;
 import com.jimmy.entity.SignUser;
 import com.jimmy.entity.UserInfo;
 import com.jimmy.jwt.JwtTokenProvider;
+import com.jimmy.req.LoginUserReq;
 import com.jimmy.req.SignUserReq;
 import com.jimmy.service.SignUserService;
 import com.jimmy.service.UserService;
@@ -18,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
+@RequestMapping("/auth")
 public class LoginController {
 
     @Resource
@@ -26,39 +28,42 @@ public class LoginController {
     @Resource
     private SignUserService signUserService;
 
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
-
     @ResponseBody
-    @PostMapping(value = "/sign-up")
+    @PostMapping(value = "/register")
     public ApplicationResponseEntity<Map<String, Object>> signUp(@Valid @RequestBody SignUserReq req) {
         SignUser saved = signUserService.insertSignUser(req);
         Map<String, Object> resultMap = new HashMap<>(8);
         if (saved != null){
             resultMap.put("result", true);
             resultMap.put("message", "注册成功");
+//            resultMap.put("user", saved);
         }else {
             resultMap.put("result", false);
             resultMap.put("message", "注册失败");
         }
-        Map<String, Object> extraClaims = new HashMap<>(2);
-        assert saved != null;
-        extraClaims.put("userId", saved.getId());
-        extraClaims.put("loginName", saved.getLoginName());
-        String token = jwtTokenProvider.generateToken(saved.getId(), extraClaims);
-        resultMap.put("token",token);
         ApplicationResponseEntity<Map<String, Object>> responseEntity = new ApplicationResponseEntity<>();
-        responseEntity.setContent(resultMap);
+        responseEntity.setData(resultMap);
         return responseEntity;
     }
 
     @ResponseBody
-    @PostMapping(value = "login")
+    @PostMapping(value = "/login")
     public ApplicationResponseEntity<Map<String,Object>> login(
-            @RequestParam(value = "loginName") String loginName,
-            @RequestParam(value = "loginPassword") String loginPassword){
-
+            @RequestBody LoginUserReq req){
+        SignUser signUser = signUserService.checkSignUser(req.getLoginName(), req.getPassword());
+        Map<String, Object> resultMap = new HashMap<>(8);
+        if (signUser != null){
+            Map<String, Object> extraClaims = new HashMap<>(2);
+            extraClaims.put("userId", signUser.getId());
+            extraClaims.put("loginName", signUser.getLoginName());
+            String token = jwtTokenProvider.generateToken(signUser.getId(), extraClaims);
+            resultMap.put("token",token);
+            resultMap.put("result", true);
+            resultMap.put("message", "登录成功");
+            resultMap.put("user", signUser);
+        }
         ApplicationResponseEntity<Map<String,Object>> result = new ApplicationResponseEntity<>();
+        result.setData(resultMap);
         return result;
     }
 
@@ -83,7 +88,7 @@ public class LoginController {
             }
         }
         ApplicationResponseEntity<Map<String, Object>> applicationResponseEntity = new ApplicationResponseEntity<>();
-        applicationResponseEntity.setContent(content);
+        applicationResponseEntity.setData(content);
         return applicationResponseEntity;
     }
 }

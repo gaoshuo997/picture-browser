@@ -14,6 +14,7 @@ import jakarta.annotation.Nullable;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -21,6 +22,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import java.util.List;
 
 @Component
+@Slf4j
 public class LoginValidatorInterceptor implements HandlerInterceptor {
 
     @Resource
@@ -30,25 +32,32 @@ public class LoginValidatorInterceptor implements HandlerInterceptor {
     @Resource
     private SignUserService signUserService;
 
+    @Override
+    public void afterCompletion(HttpServletRequest arg0,
+                                HttpServletResponse arg1, Object arg2, Exception arg3){
+        UserUtils.remove();
+    }
+
 
     @Override
     public boolean preHandle(@Nonnull HttpServletRequest request,
                              @Nonnull HttpServletResponse response, @Nullable Object arg2) throws Exception {
         String token = jwtTokenProvider.resolveToken(request);
-
+        String requestURI = request.getRequestURI();
+        String contextPath = request.getContextPath();
+        String path = requestURI.substring(contextPath.length()); // 去掉上下文路径后的纯路径
+        log.info("===== 拦截到请求，路径：{}，上下文路径：{}，处理后路径：{} =====", requestURI, contextPath, path);
         if (token != null && jwtTokenProvider.validateToken(token)) {
             Long userId = jwtTokenProvider.getUserId(token);
-            String checksum = jwtTokenProvider.getChecksum(token);
+//            String checksum = jwtTokenProvider.getChecksum(token);
             SignUser userInfo = signUserService.findSignUserById(userId);
-            List<String> actionValues = (List<String>) redisTemplate.opsForValue()
-                    .get("actionvalue_" + userId);
+//            List<String> actionValues = (List<String>) redisTemplate.opsForValue()
+//                    .get("actionvalue_" + userId);
 
-            if (checksum != null
-                    && userInfo != null) {
+            if (userInfo != null) {
                 UserUtils.setUserName(userInfo.getLoginName());
                 UserUtils.setIp(request.getRemoteAddr());
                 UserUtils.setUserId(userId);
-                UserUtils.setActions(actionValues);
                 return true;
             }
         }
@@ -61,7 +70,7 @@ public class LoginValidatorInterceptor implements HandlerInterceptor {
         content.setMessage(ErrorMsg.NOT_LOGIN.getMsg());
         ApplicationResponseEntity<ApplicationErrorResponseEntity> result = new ApplicationResponseEntity<>();
         result.setActionStatus(ActionStatus.FAIL);
-        result.setContent(content);
+        result.setData(content);
         response.getWriter().print(JacksonUtils.toJson(result));
         return false;
     }

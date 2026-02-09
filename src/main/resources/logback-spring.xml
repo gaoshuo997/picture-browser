@@ -44,9 +44,7 @@
     <logger name="springfox.bean.validators" level="ERROR"/>
     <logger name="com.netflix" level="ERROR"/>
     <logger name="org.apache" level="ERROR"/>
-    <logger name="org.quartz" level="ERROR"/>
     <logger name="org.hibernate" level="ERROR"/>
-    <logger name="com.mongodb.diagnostics.logging" level="ERROR"/>
 
     <root level="INFO">
       <appender-ref ref="ROLLING-FILE"/>
@@ -75,9 +73,7 @@
     <logger name="springfox.bean.validators" level="ERROR"/>
     <logger name="com.netflix" level="ERROR"/>
     <logger name="org.apache" level="ERROR"/>
-    <logger name="org.quartz" level="ERROR"/>
     <logger name="org.hibernate" level="ERROR"/>
-    <logger name="com.mongodb.diagnostics.logging" level="ERROR"/>
 
     <root level="INFO">
       <appender-ref ref="ROLLING-FILE"/>
@@ -106,9 +102,7 @@
     <logger name="springfox.bean.validators" level="ERROR"/>
     <logger name="com.netflix" level="ERROR"/>
     <logger name="org.apache" level="ERROR"/>
-    <logger name="org.quartz" level="ERROR"/>
     <logger name="org.hibernate" level="ERROR"/>
-    <logger name="com.mongodb.diagnostics.logging" level="ERROR"/>
 
     <root level="INFO">
       <appender-ref ref="ROLLING-FILE"/>

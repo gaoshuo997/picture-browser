@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分片上传测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #f0f3ff;
+        }
+
+        .upload-area i {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+
+        .upload-area p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .file-info {
+            background: #f8f9ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .file-info.active {
+            display: block;
+        }
+
+        .file-info-item {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        .file-info-item label {
+            width: 120px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .file-info-item span {
+            color: #333;
+        }
+
+        .progress-container {
+            background: #eee;
+            border-radius: 8px;
+            height: 30px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .progress-container.active {
+            display: block;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            width: 0%;
+        }
+
+        .chunk-info {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .config-section {
+            margin-bottom: 25px;
+        }
+
+        .config-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .log {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .log p {
+            margin-bottom: 5px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .success.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>分片上传测试</h1>
+
+        <div class="config-section">
+            <h3>上传配置</h3>
+            <div class="form-group">
+                <label>分片大小 (MB)</label>
+                <input type="number" id="chunkSize" value="5" min="1" max="100">
+            </div>
+            <div class="form-group">
+                <label>媒体类型</label>
+                <select id="mediaType">
+                    <option value="VIDEO">视频 (VIDEO)</option>
+                    <option value="IMAGE">图片 (IMAGE)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <i>&#128193;</i>
+            <p>点击选择文件或将文件拖拽到此处</p>
+        </div>
+        <input type="file" id="fileInput" style="display: none;">
+
+        <div class="file-info" id="fileInfo">
+            <div class="file-info-item">
+                <label>文件名:</label>
+                <span id="fileName"></span>
+            </div>
+            <div class="file-info-item">
+                <label>文件大小:</label>
+                <span id="fileSize"></span>
+            </div>
+            <div class="file-info-item">
+                <label>分片数量:</label>
+                <span id="chunkCount"></span>
+            </div>
+        </div>
+
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar" id="progressBar">0%</div>
+        </div>
+        <div class="chunk-info" id="chunkInfo"></div>
+
+        <div class="buttons">
+            <button class="btn btn-primary" id="uploadBtn" disabled>开始上传</button>
+            <button class="btn btn-secondary" id="cancelBtn" disabled>取消上传</button>
+        </div>
+
+        <div class="log" id="log"></div>
+
+        <div class="success" id="success">
+            上传成功！
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/pic/chunk-upload';
+        let selectedFile = null;
+        let uploadId = null;
+        let uploadedChunks = 0;
+        let isUploading = false;
+        let isCancelled = false;
+
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const chunkCount = document.getElementById('chunkCount');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const chunkInfo = document.getElementById('chunkInfo');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const log = document.getElementById('log');
+        const success = document.getElementById('success');
+        const chunkSizeInput = document.getElementById('chunkSize');
+        const mediaTypeSelect = document.getElementById('mediaType');
+
+        function addLog(message) {
+            const p = document.createElement('p');
+            p.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(p);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function formatSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', handleFileSelect);
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect();
+            }
+        });
+
+        function handleFileSelect() {
+            if (fileInput.files.length > 0) {
+                selectedFile = fileInput.files[0];
+                const chunkSize = parseInt(chunkSizeInput.value) * 1024 * 1024;
+                const totalChunks = Math.ceil(selectedFile.size / chunkSize);
+
+                fileName.textContent = selectedFile.name;
+                fileSize.textContent = formatSize(selectedFile.size);
+                chunkCount.textContent = totalChunks;
+
+                fileInfo.classList.add('active');
+                uploadBtn.disabled = false;
+                success.classList.remove('active');
+                log.innerHTML = '';
+                addLog(`已选择文件: ${selectedFile.name}`);
+            }
+        }
+
+        uploadBtn.addEventListener('click', startUpload);
+        cancelBtn.addEventListener('click', cancelUpload);
+
+        async function startUpload() {
+            if (!selectedFile || isUploading) return;
+
+            isUploading = true;
+            isCancelled = false;
+            uploadedChunks = 0;
+            uploadBtn.disabled = true;
+            cancelBtn.disabled = false;
+            progressContainer.classList.add('active');
+            success.classList.remove('active');
+
+            try {
+                const chunkSize = parseInt(chunkSizeInput.value) * 1024 * 1024;
+                const totalChunks = Math.ceil(selectedFile.size / chunkSize);
+
+                addLog('初始化上传...');
+                const initResponse = await fetch(`${API_BASE}/init`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fileName: selectedFile.name,
+                        fileSize: selectedFile.size,
+                        totalChunks: totalChunks,
+                        contentType: selectedFile.type || 'application/octet-stream'
+                    })
+                });
+
+                if (!initResponse.ok) throw new Error('初始化上传失败');
+                const initResult = await initResponse.json();
+                uploadId = initResult.data.uploadId;
+                addLog(`上传ID: ${uploadId}`);
+                addLog(`总分片数: ${totalChunks}`);
+
+                const chunkPromises = [];
+                for (let i = 0; i < totalChunks; i++) {
+                    const start = i * chunkSize;
+                    const end = Math.min(start + chunkSize, selectedFile.size);
+                    const chunk = selectedFile.slice(start, end);
+                    chunkPromises.push(uploadChunk(chunk, i + 1, totalChunks));
+                }
+
+                const results = await Promise.all(chunkPromises);
+
+                if (isCancelled) {
+                    addLog('上传已取消');
+                    return;
+                }
+
+                addLog('正在合并分片...');
+                const completeResponse = await fetch(`${API_BASE}/complete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        uploadId: uploadId,
+                        fileName: selectedFile.name,
+                        contentType: selectedFile.computedMimeType || selectedFile.type,
+                        fileSize: selectedFile.size,
+                        totalChunks: totalChunks,
+                        userId: 1,
+                        mediaType: mediaTypeSelect.value
+                    })
+                });
+
+                if (!completeResponse.ok) throw new Error('合并分片失败');
+                addLog('上传完成！');
+                success.classList.add('active');
+
+            } catch (error) {
+                addLog(`错误: ${error.message}`);
+            } finally {
+                isUploading = false;
+                uploadBtn.disabled = false;
+                cancelBtn.disabled = true;
+            }
+        }
+
+        async function uploadChunk(chunk, chunkNumber, totalChunks) {
+            if (isCancelled) return;
+
+            const formData = new FormData();
+            formData.append('file', chunk);
+            formData.append('uploadId', uploadId);
+            formData.append('chunkNumber', chunkNumber);
+
+            const response = await fetch(`${API_BASE}/chunk`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) throw new Error(`分片 ${chunkNumber} 上传失败`);
+
+            uploadedChunks++;
+            const progress = Math.round((uploadedChunks / totalChunks) * 100);
+            progressBar.style.width = progress + '%';
+            progressBar.textContent = progress + '%';
+            chunkInfo.textContent = `已上传: ${uploadedChunks}/${totalChunks}`;
+
+            addLog(`分片 ${chunkNumber}/${totalChunks} 上传完成`);
+        }
+
+        async function cancelUpload() {
+            if (!isUploading || !uploadId) return;
+
+            isCancelled = true;
+            addLog('正在取消上传...');
+
+            try {
+                await fetch(`${API_BASE}/abort`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        uploadId: uploadId,
+                        uploadedChunks: uploadedChunks
+                    })
+                });
+                addLog('已取消上传');
+            } catch (error) {
+                addLog(`取消失败: ${error.message}`);
+            }
+
+            isUploading = false;
+            uploadBtn.disabled = false;
+            cancelBtn.disabled = true;
+            progressBar.style.width = '0%';
+            progressBar.textContent = '0%';
+            chunkInfo.textContent = '';
+        }
+    </script>
+</body>
+</html>
