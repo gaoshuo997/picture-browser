@@ -75,7 +75,7 @@ public class MediaController {
             @PathVariable @NotNull(message = "媒体的id不能为空") Long id,
             @RequestHeader(value = HttpHeaders.RANGE, required = false) String rangeHeader) {
         try {
-            return CompletableFuture.supplyAsync(() -> 
+            return CompletableFuture.supplyAsync(() ->
                     mediaUploadService.getMediaResource(id, rangeHeader), taskExecutor).get();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

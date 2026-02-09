@@ -10,7 +10,7 @@ spring:
     name: picture-browser
 
 jwt:
-  secret-key: YTV1ZEFUTm0vQUg0QkM3WVNCUTVhbFM0NTJQMllGVlVxbXRZUFhIdmc1OD0=
+  secret-key: <>
   expire-time: 7200000
 
 

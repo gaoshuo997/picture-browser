@@ -6,9 +6,9 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
   datasource:
-    url: jdbc:postgresql://192.168.0.103:5432/picture-browser
-    username: postgres
-    password: admin1234
+    url: <>
+    username: <>
+    password: <>
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -17,9 +17,9 @@ spring:
 
   data:
     redis:
-      host: 192.168.0.103
+      host: <>
       port: 6379
-      password: admin1234
+      password: <>
       database: 0
       # 超时配置（Spring Boot 3.x 统一使用Duration格式，也兼容毫秒数值）
       timeout: PT10S           # 连接超时时间（PT10S = 10秒，兼容写法：10000）
@@ -45,10 +45,10 @@ spring:
             initialize-schema: always   #项目启动时自动初始化chat memory表
 
 minio:
-  endpoint: http://192.168.0.103:9000 # MinIO服务地址（本地部署默认9000端口）
-  access-key: admin # MinIO访问密钥（默认账号）
-  secret-key: admin@123456 # MinIO秘钥（默认密码）
-  bucket-name: mojing # 存储图片的桶名（需提前在MinIO控制台创建，或让代码自动创建）
-  read-path: http://192.168.0.103:9000 # 图片访问的基础路径（与endpoint一致，若配置域名可改为域名）
+  endpoint: <> # MinIO服务地址（本地部署默认9000端口）
+  access-key: <> # MinIO访问密钥（默认账号）
+  secret-key: <> # MinIO秘钥（默认密码）
+  bucket-name: <> # 存储图片的桶名（需提前在MinIO控制台创建，或让代码自动创建）
+  read-path: <> # 图片访问的基础路径（与endpoint一致，若配置域名可改为域名）
 
-cci-data: YTV1ZEFUTm0vQUg0QkM3WVNCUTVhbFM0NTJQMllGVlVxbXRZUFhIdmc1OD0=
+cci-data: <>
