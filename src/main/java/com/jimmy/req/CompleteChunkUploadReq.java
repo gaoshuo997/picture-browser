@@ -6,6 +6,7 @@ import lombok.Data;
 public class CompleteChunkUploadReq {
     private String uploadId;
     private String fileName;
+    private String bucketName;
     private String contentType;
     private Long fileSize;
     private Integer totalChunks;

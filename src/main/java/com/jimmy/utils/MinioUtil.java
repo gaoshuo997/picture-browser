@@ -6,6 +6,7 @@ import com.jimmy.constant.UploadResultRecord;
 import com.jimmy.entity.enums.MediaType;
 import io.minio.*;
 import io.minio.errors.MinioException;
+import io.minio.http.Method;
 import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,9 @@ public class MinioUtil {
 
     @Value("${minio.read-path}")
     private String readPath;
+
+    @Value("${minio.expire-time}")
+    private Integer expireTime;
 
     private final List<String> imageTypeList = new ArrayList<>(Arrays.asList("jpeg","png","gif","webpg"));
 
@@ -252,6 +256,20 @@ public class MinioUtil {
                 log.warn("删除临时分片失败：{}", chunkObjectName, e);
                 throw new RuntimeException("删除临时分片失败",e);
             }
+        }
+    }
+
+    public String getPresignedObjectUrl(String bucketName, String objectName){
+        try{
+            return minioClient.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
+                    .method(Method.GET)
+                    .bucket(bucketName)
+                    .object(objectName)
+                    .expiry(expireTime)
+                    .build());
+        }catch (Exception e){
+            throw new BadRequestException(BadReqExceptionMsg.PRE_SIGNED_ERROR.getCode(), BadReqExceptionMsg.PRE_SIGNED_ERROR.getMessage(),
+                    BadReqExceptionMsg.PRE_SIGNED_ERROR.getMessage());
         }
     }
 }

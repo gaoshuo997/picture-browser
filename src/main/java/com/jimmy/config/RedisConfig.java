@@ -26,7 +26,7 @@ public class RedisConfig {
      */
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<String, Object>();
         // 设置Lettuce连接工厂（Spring Boot 3.x自动注入的是LettuceConnectionFactory）
         redisTemplate.setConnectionFactory(connectionFactory);
 

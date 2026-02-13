@@ -27,7 +27,9 @@ public enum BadReqExceptionMsg {
 
     REMOVE_OBJECT_ERROR(40010,"移除文件对像失败"),
 
-    MEDIA_IS_NOT_EXIST(40011,"这个媒体文件不存在");
+    MEDIA_IS_NOT_EXIST(40011,"这个媒体文件不存在"),
+
+    PRE_SIGNED_ERROR(40012,"生成媒体预签名失败");
 
     private final int code;
     private final String message;

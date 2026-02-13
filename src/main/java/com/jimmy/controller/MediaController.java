@@ -8,19 +8,13 @@ import com.jimmy.service.MediaUploadService;
 import com.jimmy.utils.MinioUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/media")
@@ -31,10 +25,6 @@ public class MediaController {
 
     @Autowired
     private MediaUploadService mediaUploadService;
-
-    @Autowired
-    @Qualifier("taskExecutor")
-    private Executor taskExecutor;
 
     @PostMapping("/upload/image")
     public ApplicationResponseEntity<Map<String, Object>> uploadImage(@RequestParam("file") MultipartFile multipartFile){
@@ -70,26 +60,25 @@ public class MediaController {
         return result;
     }
 
-    @GetMapping("/proxy/{id}")
-    public ResponseEntity<Resource> proxyMedia(
-            @PathVariable @NotNull(message = "媒体的id不能为空") Long id,
-            @RequestHeader(value = HttpHeaders.RANGE, required = false) String rangeHeader) {
-        try {
-            return CompletableFuture.supplyAsync(() ->
-                    mediaUploadService.getMediaResource(id, rangeHeader), taskExecutor).get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("获取媒体资源被中断", e);
-        } catch (ExecutionException e) {
-            throw new RuntimeException("获取媒体资源失败", e.getCause());
-        }
+    @GetMapping("/presignedUrl/{id}")
+    public ApplicationResponseEntity<String> getPreSignedUrl(
+            @PathVariable @NotNull(message = "媒体的id不能为空") Long id){
+        String presignedUrl = mediaUploadService.getPresignedUrl(id);
+        ApplicationResponseEntity<String> result = new ApplicationResponseEntity<>();
+        result.setData(presignedUrl);
+        return result;
     }
 
-//    @DeleteMapping("/{id}")
-//    public ApplicationResponseEntity delete(
-//            @PathVariable @NotNull(message = "媒体的id不能为空") Long id){
-//        return new ApplicationResponseEntity();
-//    }
+    @DeleteMapping("/{id}")
+    public ApplicationResponseEntity<Map<String, Object>> delete(
+            @PathVariable @NotNull(message = "媒体的id不能为空") Long id){
+        mediaUploadService.deleteById(id);
+        ApplicationResponseEntity<Map<String, Object>> result = new ApplicationResponseEntity<>();
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("message","删除成功");
+        result.setData(resultMap);
+        return result;
+    }
 
 
 }

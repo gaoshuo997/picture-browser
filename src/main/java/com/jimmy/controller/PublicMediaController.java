@@ -6,11 +6,7 @@ import com.jimmy.entity.enums.MediaType;
 import com.jimmy.resp.MediaResp;
 import com.jimmy.service.MediaUploadService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import javax.validation.constraints.NotNull;
 
 @RestController
@@ -43,16 +39,12 @@ public class PublicMediaController {
         return result;
     }
 
-    /**
-     * todo 这里要做混淆处理，由于ID策略是自增的其余的资源很容易被猜到ID
-     * @param id 媒体资源ID
-     * @param rangeHeader 请求头
-     * @return 返回数据流
-     */
-    @GetMapping("/media/proxy/{id}")
-    public ResponseEntity<Resource> proxyMedia(
-            @PathVariable @NotNull(message = "媒体的id不能为空") Long id,
-            @RequestHeader(value = HttpHeaders.RANGE, required = false) String rangeHeader) {
-        return mediaUploadService.getMediaResource(id, rangeHeader);
+    @GetMapping("/media/presignedUrl/{id}")
+    public ApplicationResponseEntity<String> getPreSignedUrl(
+            @PathVariable @NotNull(message = "媒体的id不能为空") Long id){
+        String presignedUrl = mediaUploadService.getPresignedUrl(id);
+        ApplicationResponseEntity<String> result = new ApplicationResponseEntity<>();
+        result.setData(presignedUrl);
+        return result;
     }
 }

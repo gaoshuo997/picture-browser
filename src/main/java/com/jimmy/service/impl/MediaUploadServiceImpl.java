@@ -5,45 +5,35 @@ import com.jimmy.common.core.BadRequestException;
 import com.jimmy.common.exception.BadReqExceptionMsg;
 import com.jimmy.constant.UploadResultRecord;
 import com.jimmy.entity.Media;
-import com.jimmy.entity.SignUser;
 import com.jimmy.entity.enums.BucketName;
 import com.jimmy.entity.enums.MediaType;
+import com.jimmy.entity.enums.RedisKeyName;
 import com.jimmy.repository.MediaRepository;
 import com.jimmy.req.MediaReq;
-import com.jimmy.req.SignUserReq;
 import com.jimmy.resp.MediaResp;
 import com.jimmy.service.MediaUploadService;
 import com.jimmy.utils.DateUtils;
 import com.jimmy.utils.MinioUtil;
 import com.jimmy.utils.UserUtils;
-import io.minio.GetObjectArgs;
 import jakarta.annotation.Resource;
 import jakarta.persistence.criteria.Predicate;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.CacheControl;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import java.time.Duration;
+import java.util.*;
 
 @Service
+@Slf4j
 @Transactional(rollbackFor = Exception.class)
 public class MediaUploadServiceImpl implements MediaUploadService {
 
@@ -51,6 +41,8 @@ public class MediaUploadServiceImpl implements MediaUploadService {
     private MediaRepository mediaRepository;
     @Resource
     private MinioUtil minioUtil;
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     @Override
     public Media uploadImage(MultipartFile multipartFile) {
@@ -127,68 +119,15 @@ public class MediaUploadServiceImpl implements MediaUploadService {
             media.setFileName(fileName);
         }
         media.setSize(mediaReq.getSize());
+        media.setBucketName(mediaReq.getBucketName());
         media.setMediaType(MediaType.valueOf(mediaReq.getMediaType()));
-        media.setUrl(minioUtil.getFileAccessUrl(mediaReq.getObjectName(), BucketName.MO_JING.getMsg()));
+        media.setUrl(minioUtil.getFileAccessUrl(mediaReq.getObjectName(), mediaReq.getBucketName()));
         return mediaRepository.save(media);
     }
 
     @Override
     public PaginatedApiResult<MediaResp> publicList(Integer page, Integer size, String type) {
         return this.list(page,size, type);
-    }
-
-    @Override
-    public ResponseEntity<org.springframework.core.io.Resource> getMediaResource(Long id,String rangeHeader) {
-        MediaResp detail = this.getDetail(id);
-        if (!detail.getObjectName().isEmpty()){
-            GetObjectArgs args = GetObjectArgs.builder()
-                    .bucket(BucketName.MO_JING.getMsg())
-                    .object(detail.getObjectName())
-                    .build();
-
-            long fileSize = detail.getSize();
-            if (fileSize <= 0) {
-                return ResponseEntity.internalServerError().build();
-            }
-
-            try {
-                InputStream stream = minioUtil.getObject(args);
-
-                if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
-                    String rangeValue = rangeHeader.substring(6);
-                    String[] ranges = rangeValue.split("-");
-                    long start = Long.parseLong(ranges[0]);
-                    long end = ranges.length > 1 && !ranges[1].isEmpty() ? Long.parseLong(ranges[1]) : fileSize - 1;
-
-                    long contentLength = end - start + 1;
-                    long skipped = stream.skip(start);
-                    while (skipped < start) {
-                        skipped += stream.skip(start - skipped);
-                    }
-                    InputStreamResource resource = new InputStreamResource(stream);
-
-                    return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT)
-                            .header(HttpHeaders.CONTENT_RANGE, "bytes " + start + "-" + end + "/" + fileSize)
-                            .header(HttpHeaders.ACCEPT_RANGES, "bytes")
-                            .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength))
-                            .contentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM)
-                            .cacheControl(CacheControl.maxAge(1, TimeUnit.DAYS))
-                            .body(resource);
-                }
-
-                InputStreamResource resource = new InputStreamResource(stream);
-                return ResponseEntity.ok()
-                        .header(HttpHeaders.ACCEPT_RANGES, "bytes")
-                        .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(fileSize))
-                        .contentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM)
-                        .cacheControl(CacheControl.maxAge(1, TimeUnit.DAYS))
-                        .body(resource);
-            } catch (IOException e) {
-                return ResponseEntity.internalServerError().build();
-            }
-        }else {
-            return ResponseEntity.internalServerError().body(null);
-        }
     }
 
     @Override
@@ -202,7 +141,33 @@ public class MediaUploadServiceImpl implements MediaUploadService {
     @Override
     public void deleteById(Long id) {
         Media media = checkMediaExistOrNot(id);
-        minioUtil.removeObject(media);
+        minioUtil.removeObject(media.getBucketName(), media.getObjectName());
+        // 如果是媒体资源，有封面的删除封面
+        if (media.getMediaType().equals(MediaType.VIDEO)){
+            Optional<Media> byId = mediaRepository.findById(media.getThumbnail());
+            byId.ifPresent(value -> mediaRepository.deleteById(value.getId()));
+        }
+        mediaRepository.deleteById(id);
+    }
+
+    @Override
+    public String getPresignedUrl(Long id) {
+        String redisKey = RedisKeyName.MEDIA_PRE_SiGN_URL.getName();
+        String idStr = String.valueOf(id);
+        Boolean hasKey = stringRedisTemplate.opsForHash().hasKey(redisKey, idStr);
+        if (hasKey){
+            return Objects.requireNonNull(stringRedisTemplate.opsForHash()
+                    .get(RedisKeyName.MEDIA_PRE_SiGN_URL.getName(), idStr)).toString();
+        }
+        Media media = checkMediaExistOrNot(id);
+        String presignedObjectUrl = minioUtil.getPresignedObjectUrl(media.getBucketName(), media.getObjectName());
+
+        stringRedisTemplate.opsForHash().put(redisKey, idStr, presignedObjectUrl);
+        Boolean expireResult = stringRedisTemplate.expire(redisKey, Duration.ofHours(12));
+        if (!Boolean.TRUE.equals(expireResult)) {
+            log.warn("Set Redis TTL failed for key: {}, result: {}", redisKey, expireResult);
+        }
+        return minioUtil.getPresignedObjectUrl(media.getBucketName(),media.getObjectName());
     }
 
     /**

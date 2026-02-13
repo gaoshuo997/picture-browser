@@ -12,6 +12,7 @@ import com.jimmy.utils.UserUtils;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -20,10 +21,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 
 /**
  * 分片上传视频
@@ -37,6 +42,10 @@ public class ChunkUploadController {
 
     @Autowired
     private MediaUploadService mediaUploadService;
+
+    @Autowired
+    @Qualifier("taskExecutor")
+    private Executor taskExecutor;
 
     @GetMapping("/test")
     public ResponseEntity<Resource> getTestPage() throws IOException {
@@ -55,7 +64,7 @@ public class ChunkUploadController {
         String uploadId = UUID.randomUUID().toString();
         minioUtil.createBucketIfNotExists(BucketName.MO_JING.getMsg());
         ApplicationResponseEntity<InitUploadResp> response = new ApplicationResponseEntity<>();
-        response.setData(new InitUploadResp(uploadId));
+        response.setData(new InitUploadResp(uploadId, BucketName.MO_JING.getMsg()));
         return response;
     }
 
@@ -66,12 +75,25 @@ public class ChunkUploadController {
     public ApplicationResponseEntity<Object> uploadChunk(
             @RequestParam("file") MultipartFile chunk,
             @RequestParam("uploadId") String uploadId,
-            @RequestParam("chunkNumber") Integer chunkNumber) throws IOException {
-        String chunkName = minioUtil.uploadChunk(BucketName.MO_JING.getMsg(), uploadId, chunkNumber,
-                chunk.getInputStream(), chunk.getSize());
-        ApplicationResponseEntity<Object> response = new ApplicationResponseEntity<>();
-        response.setData(chunkName);
-        return response;
+            @RequestParam("chunkNumber") Integer chunkNumber,
+            @RequestParam("bucketName") String bucketName) throws IOException {
+        try {
+            // 将分片数据读取到字节数组，避免 InputStream 在异步任务中被关闭
+            byte[] chunkData = chunk.getBytes();
+            long chunkSize = chunk.getSize();
+
+            String chunkName = CompletableFuture.supplyAsync(() ->
+                    minioUtil.uploadChunk(bucketName, uploadId, chunkNumber,
+                            new ByteArrayInputStream(chunkData), chunkSize), taskExecutor).get();
+            ApplicationResponseEntity<Object> response = new ApplicationResponseEntity<>();
+            response.setData(chunkName);
+            return response;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("上传分片被中断", e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException("上传分片失败", e.getCause());
+        }
     }
 
     /**
@@ -80,7 +102,7 @@ public class ChunkUploadController {
     @PostMapping("/complete")
     public ApplicationResponseEntity<Map<String, Object>> completeUpload(@RequestBody CompleteChunkUploadReq req) {
         String objectName = UUID.randomUUID() + req.getFileName();
-        minioUtil.completeChunkUpload(BucketName.MO_JING.getMsg(), req.getUploadId(),
+        minioUtil.completeChunkUpload(req.getBucketName(), req.getUploadId(),
                 req.getTotalChunks(), objectName, req.getContentType());
 
         MediaReq saveMedia = new MediaReq();
@@ -89,11 +111,13 @@ public class ChunkUploadController {
         saveMedia.setFileName(req.getFileName());
         saveMedia.setSize(req.getFileSize());
         saveMedia.setUserId(UserUtils.getUserId());
+        saveMedia.setBucketName(req.getBucketName());
         Media media = mediaUploadService.saveMediaRecord(saveMedia);
 
         Map<String, Object> result = new HashMap<>(2);
         result.put("objectName", objectName);
         result.put("id", media.getId());
+        result.put("bucketName", media.getBucketName());
         ApplicationResponseEntity<Map<String, Object>> response = new ApplicationResponseEntity<>();
         response.setData(result);
         return response;
@@ -127,7 +151,7 @@ public class ChunkUploadController {
      */
     @PostMapping("/abort")
     public ApplicationResponseEntity<Object> abortUpload(@RequestBody AbortUploadReq req) {
-        minioUtil.abortChunkUpload(BucketName.MO_JING.getMsg(), req.getUploadId(), req.getUploadedChunks());
+        minioUtil.abortChunkUpload(req.getBucketName(), req.getUploadId(), req.getUploadedChunks());
         ApplicationResponseEntity<Object> response = new ApplicationResponseEntity<>();
         response.setData(null);
         return response;
@@ -144,9 +168,11 @@ public class ChunkUploadController {
     @Data
     public static class InitUploadResp {
         private String uploadId;
+        private String bucketName;
 
-        public InitUploadResp(String uploadId) {
+        public InitUploadResp(String uploadId, String bucketName) {
             this.uploadId = uploadId;
+            this.bucketName = bucketName;
         }
     }
 
@@ -154,5 +180,6 @@ public class ChunkUploadController {
     public static class AbortUploadReq {
         private String uploadId;
         private Integer uploadedChunks;
+        private String bucketName;
     }
 }
