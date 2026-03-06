@@ -1,10 +1,8 @@
 package com.jimmy.service.impl;
 
 import com.jimmy.entity.*;
-import com.jimmy.entity.enums.MediaType;
 import com.jimmy.repository.*;
 import com.jimmy.req.LearningProgressReq;
-import com.jimmy.req.MediaReq;
 import com.jimmy.resp.LearningProgressResp;
 import com.jimmy.service.LearningService;
 import com.jimmy.utils.DateUtils;
@@ -39,16 +37,21 @@ public class LearningServiceImpl implements LearningService {
     private UserLearnRecordRepository userLearnRecordRepository;
 
     @Override
-    public LearningProgressResp getStart(String courseId) {
+    public LearningProgressResp getStart(Long courseId) {
         UserCourseProgress first = userCourseProgressRepository
                 .findFirstByCourseIdAndUserId(courseId, UserUtils.getUserId());
 
         if(first == null){
-            return null;
+            LearningProgressResp resp = new LearningProgressResp();
+            resp.setUserId(UserUtils.getUserId());
+            resp.setCourseId(courseId);
+            resp.setStatementIndex(0);
+            resp.setCompletedStatement(List.of());
+            return resp;
         }
         Integer statementIndex = first.getStatementIndex();
         LearningRecord record = new LearningRecord(first.getUserId(),first.getCourseId(),first.getCoursePackId(),
-                statementIndex,0);
+                statementIndex,0,0);
 
         Specification<Statements> statementsSpecification = buildSpecification(record);
         Sort sort = Sort.by(Sort.Direction.ASC, "order");
@@ -76,7 +79,7 @@ public class LearningServiceImpl implements LearningService {
         // 保存历史记录
         LearningRecord record = new LearningRecord(UserUtils.getUserId(), statements.getCourseId(),
                 coursesOptional.get().getCoursePackId(), statements.getOrder(),
-                req.getDuration());
+                req.getDuration(),req.getCount());
         saveCourseHistory(record);
 
         // 保存学习进度
@@ -89,7 +92,7 @@ public class LearningServiceImpl implements LearningService {
 
     /**
      * 保存或更新课程记录
-     * @param record
+     * @param record 保存参数
      */
     private void saveCourseHistory(LearningRecord record){
         CourseHistory courseHistory = courseHistoryRepository
@@ -98,7 +101,6 @@ public class LearningServiceImpl implements LearningService {
         Date now = new Date();
         if (courseHistory == null){
             courseHistory = new CourseHistory();
-            courseHistory.setId(java.util.UUID.randomUUID().toString());
             courseHistory.setCourseId(record.courseId());
             courseHistory.setUserId(UserUtils.getUserId());
             courseHistory.setCoursePackId(record.coursePackId());
@@ -114,28 +116,24 @@ public class LearningServiceImpl implements LearningService {
 
     /**
      * 保存用户学习进度
-     * @param record
+     * @param record 参数
      */
     private void saveUserProgress(LearningRecord record){
         UserCourseProgress userProgress = userCourseProgressRepository
                 .findFirstByCoursePackIdAndUserIdAndCourseId(record.coursePackId(),
                         record.userId(), record.courseId());
         Date now = new Date();
-        Integer count;
 
         if (userProgress == null){
             userProgress = new UserCourseProgress();
-            userProgress.setId(java.util.UUID.randomUUID().toString());
             userProgress.setUserId(record.userId());
             userProgress.setCourseId(record.courseId());
             userProgress.setCoursePackId(record.coursePackId());
-            userProgress.setStatementIndex(record.order() - 1);
+            userProgress.setStatementIndex(record.order());
             userProgress.setCreatedAt(now);
             userProgress.setUpdatedAt(now);
-            count = record.order();
         }else {
-            count = record.order() - userProgress.getStatementIndex();
-            userProgress.setStatementIndex(Math.max(userProgress.getStatementIndex() - 1, record.order()));
+            userProgress.setStatementIndex(Math.max(userProgress.getStatementIndex(), record.order()));
             userProgress.setUpdatedAt(now);
         }
         userCourseProgressRepository.save(userProgress);
@@ -144,15 +142,14 @@ public class LearningServiceImpl implements LearningService {
                 UserUtils.getUserId());
         if (userLearnRecord == null){
             userLearnRecord = new UserLearnRecord();
-            userLearnRecord.setId(java.util.UUID.randomUUID().toString());
             userLearnRecord.setUserId(UserUtils.getUserId());
             userLearnRecord.setDay(LocalDate.now());
             userLearnRecord.setDuration(record.duration());
             userLearnRecord.setUpdatedAt(now);
             userLearnRecord.setCreatedAt(now);
-            userLearnRecord.setCount(count);
+            userLearnRecord.setCount(record.count());
         }else {
-            userLearnRecord.setCount(userLearnRecord.getCount() + count);
+            userLearnRecord.setCount(userLearnRecord.getCount() + record.count());
             userLearnRecord.setDuration(userLearnRecord.getDuration() + record.duration());
         }
         userLearnRecordRepository.save(userLearnRecord);
@@ -162,7 +159,7 @@ public class LearningServiceImpl implements LearningService {
         return (root, query, cb) -> {
             // 存储查询条件的集合
             List<Predicate> predicates = new ArrayList<>();
-            if (record.courseId() != null && !record.courseId().isEmpty()){
+            if (record.courseId() != null){
                 predicates.add(cb.equal(root.get("courseId"), record.courseId()));
             }
             if (record.order() != null){
@@ -173,8 +170,9 @@ public class LearningServiceImpl implements LearningService {
 
     }
 
-    private record LearningRecord(Long userId,String courseId,
-                                  String coursePackId,
+    private record LearningRecord(Long userId,Long courseId,
+                                  Long coursePackId,
                                   Integer order,
-                                  Integer duration){}
+                                  Integer duration,
+                                  Integer count){}
 }

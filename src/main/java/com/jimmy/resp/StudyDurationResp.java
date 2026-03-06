@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class StudyDurationResp {
 
-    private String id;
+    private Long id;
 
     private Long userId;
 
@@ -13,5 +13,5 @@ public class StudyDurationResp {
 
     private Integer duration;
 
-    private String  courseId;
+    private Long  courseId;
 }

@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface UserLearnRecordRepository extends JpaRepository<UserLearnRecord, String> ,
+public interface UserLearnRecordRepository extends JpaRepository<UserLearnRecord, Long> ,
         JpaSpecificationExecutor<UserLearnRecord> {
     UserLearnRecord findByDayAndUserId(LocalDate day,Long userId);
 

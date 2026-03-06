@@ -7,9 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface CoursesRepository extends JpaRepository<Courses, String> {
+public interface CoursesRepository extends JpaRepository<Courses, Long> {
 
-    List<Courses> findByCoursePackId(String coursePackId);
+    Integer countByCoursePackId(Long id);
 
-    Integer countByCoursePackId(String id);
+    List<Courses> findByCoursePackIdOrderByOrderAsc(Long coursePackId);
 }

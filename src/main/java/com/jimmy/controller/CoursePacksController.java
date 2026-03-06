@@ -29,7 +29,7 @@ public class CoursePacksController {
 
     @GetMapping("/fetch/{id}")
     public ApplicationResponseEntity<CoursePacksResp> fetchCoursePack(
-            @PathVariable @NotNull(message = "id不能为空") String id) {
+            @PathVariable @NotNull(message = "id不能为空") Long id) {
         CoursePacksResp coursePacksResp = coursePacksService.fetch(id);
         ApplicationResponseEntity<CoursePacksResp> result = new ApplicationResponseEntity<>();
         result.setData(coursePacksResp);

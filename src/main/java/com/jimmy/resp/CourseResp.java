@@ -7,7 +7,7 @@ import java.util.List;
 @Data
 public class CourseResp {
 
-    private String id;
+    private Long id;
 
     private String title;
 
@@ -23,7 +23,7 @@ public class CourseResp {
     // 当前学习的章节
     private Integer statementIndex;
 
-    private String coursePackId;
+    private Long coursePackId;
 
     // 课程下总共有多少个句子
     private Integer statementCount;

@@ -4,5 +4,5 @@ import com.jimmy.resp.CourseResp;
 
 public interface CourseService {
 
-    CourseResp fetch(String courseId);
+    CourseResp fetch(Long courseId);
 }

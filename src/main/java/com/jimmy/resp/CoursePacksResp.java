@@ -6,7 +6,7 @@ import java.util.List;
 
 @Data
 public class CoursePacksResp {
-    private String id;
+    private Long id;
 
     private String title;
 

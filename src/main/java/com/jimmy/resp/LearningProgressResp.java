@@ -7,17 +7,19 @@ import java.util.List;
 @Data
 public class LearningProgressResp {
 
-    private String id;
+    private Long id;
 
     private Long userId;
 
-    private String courseId;
+    private Long courseId;
 
-    private String statementId;
+    private String courseTitle;
+
+    private Long statementId;
 
     private Integer statementIndex;
 
     private String lastStudyAt;
 
-    private List<String> completedStatement;
+    private List<Long> completedStatement;
 }

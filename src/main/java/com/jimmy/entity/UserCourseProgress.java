@@ -1,14 +1,8 @@
 package com.jimmy.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
-
 import java.util.Date;
-
-import static lombok.AccessLevel.PROTECTED;
 
 @Data
 @Entity
@@ -16,16 +10,17 @@ import static lombok.AccessLevel.PROTECTED;
 public class UserCourseProgress {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
     @Column(name = "course_id", nullable = false)
-    private String courseId;
+    private Long courseId;
 
     @Column(name = "course_pack_id", nullable = false)
-    private String coursePackId;
+    private Long coursePackId;
 
     @Column(name = "statement_index", nullable = false)
     private Integer statementIndex;

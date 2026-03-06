@@ -5,7 +5,7 @@ import com.jimmy.resp.LearningProgressResp;
 
 public interface LearningService {
 
-    LearningProgressResp getStart(String courseId);
+    LearningProgressResp getStart(Long courseId);
 
     void completeStatement(LearningProgressReq req);
 }

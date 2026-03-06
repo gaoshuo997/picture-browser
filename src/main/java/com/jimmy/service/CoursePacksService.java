@@ -8,5 +8,5 @@ public interface CoursePacksService {
 
     List<CoursePacksResp> list();
 
-    CoursePacksResp fetch(String id);
+    CoursePacksResp fetch(Long id);
 }

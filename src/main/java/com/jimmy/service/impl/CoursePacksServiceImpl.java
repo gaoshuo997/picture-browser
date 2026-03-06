@@ -9,8 +9,8 @@ import com.jimmy.resp.CoursePacksResp;
 import com.jimmy.resp.CourseResp;
 import com.jimmy.service.CoursePacksService;
 import com.jimmy.utils.DateUtils;
+import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,13 +21,13 @@ import java.util.stream.Collectors;
 @Transactional(rollbackFor = Exception.class)
 public class CoursePacksServiceImpl implements CoursePacksService {
 
-    @Autowired
+    @Resource
     private CoursePacksRepository coursePacksRepository;
-    @Autowired
+    @Resource
     private CoursesRepository coursesRepository;
-    @Autowired
+    @Resource
     private CourseHistoryRepository courseHistoryRepository;
-    @Autowired
+    @Resource
     private StatementsRepository statementsRepository;
 
     @Override
@@ -44,8 +44,8 @@ public class CoursePacksServiceImpl implements CoursePacksService {
     }
 
     @Override
-    public CoursePacksResp fetch(String id) {
-        Optional<CoursePacks> byId = coursePacksRepository.findById(String.valueOf(id));
+    public CoursePacksResp fetch(Long id) {
+        Optional<CoursePacks> byId = coursePacksRepository.findById(id);
         if (byId.isPresent()) {
             CoursePacks coursePacks = byId.get();
             CoursePacksResp resp = new CoursePacksResp();
@@ -53,7 +53,7 @@ public class CoursePacksServiceImpl implements CoursePacksService {
             resp.setCreatedAt(DateUtils.format(coursePacks.getCreatedAt(),DateUtils.DATE_FORMAT));
 
             // 根据课程包获取课程表
-            List<Courses> coursesByCoursePackId = coursesRepository.findByCoursePackId(coursePacks.getId());
+            List<Courses> coursesByCoursePackId = coursesRepository.findByCoursePackIdOrderByOrderAsc(coursePacks.getId());
 
             // 根据课程包获取用户历史学习记录
             List<CourseHistory> historyByCoursePackId = courseHistoryRepository.findByCoursePackId(coursePacks.getId());
@@ -61,20 +61,18 @@ public class CoursePacksServiceImpl implements CoursePacksService {
             List<Statements> statementsList = statementsRepository.findByCourseIdIn(coursesByCoursePackId.stream()
                     .map(Courses::getId).toList());
 
-            Map<String, List<Statements>> statementGroup = statementsList.stream()
+            Map<Long, List<Statements>> statementGroup = statementsList.stream()
                     .collect(Collectors.groupingBy(Statements::getCourseId));
 
             resp.setCourses(coursesByCoursePackId.stream().map(course -> {
                 CourseResp courseResp = new CourseResp();
                 BeanUtils.copyProperties(course, courseResp);
                 courseResp.setCoursePackId(coursePacks.getId());
-                Optional<CourseHistory> first = historyByCoursePackId.stream().filter(history -> {
-                    return history.getCourseId().equals(course.getId());
-                }).findFirst();
+                Optional<CourseHistory> first = historyByCoursePackId.stream().filter(history -> history.getCourseId().equals(course.getId())).findFirst();
                 courseResp.setCompletionCount(first.map(CourseHistory::getCompletionCount).orElse(0));
                 courseResp.setStatementCount(statementGroup.get(course.getId()).size());
                 return courseResp;
-            }).sorted(Comparator.comparingInt(CourseResp::getOrder)).toList());
+            }).toList());
             return resp;
         }
         return null;

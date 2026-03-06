@@ -15,7 +15,7 @@ public class CourseController {
 
     @GetMapping("/{id}")
     public ApplicationResponseEntity<CourseResp> getDetail(
-           @PathVariable("id") String courseId){
+           @PathVariable("id") Long courseId){
         CourseResp fetch = courseService.fetch(courseId);
         ApplicationResponseEntity<CourseResp> result = new ApplicationResponseEntity<>();
         result.setData(fetch);

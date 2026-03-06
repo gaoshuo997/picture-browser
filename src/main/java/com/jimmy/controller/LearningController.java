@@ -20,7 +20,7 @@ public class LearningController {
 
     @GetMapping("/start/{id}")
     public ApplicationResponseEntity<LearningProgressResp> getStart(
-            @PathVariable("id") @NotNull(message = "课程id不能为空")String courseId){
+            @PathVariable("id") @NotNull(message = "课程id不能为空")Long courseId){
         LearningProgressResp start = learningService.getStart(courseId);
         ApplicationResponseEntity<LearningProgressResp> result = new ApplicationResponseEntity<>();
         result.setData(start);

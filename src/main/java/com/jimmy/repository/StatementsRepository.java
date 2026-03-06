@@ -8,11 +8,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface StatementsRepository extends JpaRepository<Statements, String>,
+public interface StatementsRepository extends JpaRepository<Statements, Long>,
         JpaSpecificationExecutor<Statements> {
-    List<Statements> findByCourseIdIn(List<String> courseIdList);
+    List<Statements> findByCourseIdIn(List<Long> courseIdList);
 
-    List<Statements> findByCourseId(String courseId);
-
-    Integer countByCourseId(String curseId);
+    List<Statements> findByCourseId(Long courseId);
 }

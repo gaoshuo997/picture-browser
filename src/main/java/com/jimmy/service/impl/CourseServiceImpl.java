@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,7 +27,7 @@ public class CourseServiceImpl implements CourseService {
     private StatementsRepository statementsRepository;
 
     @Override
-    public CourseResp fetch(String courseId) {
+    public CourseResp fetch(Long courseId) {
         Optional<Courses> byId = coursesRepository.findById(courseId);
         if (byId.isEmpty()){
             throw new RuntimeException("课程不存在");
@@ -41,7 +42,7 @@ public class CourseServiceImpl implements CourseService {
             BeanUtils.copyProperties(statement, statementResp);
             statementRespList.add(statementResp);
         }
-        statementRespList.sort((s1, s2) -> s1.getOrder().compareTo(s2.getOrder()));
+        statementRespList.sort(Comparator.comparing(StatementResp::getOrder));
         resp.setStatements(statementRespList);
         return resp;
     }

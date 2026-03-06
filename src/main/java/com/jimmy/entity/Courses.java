@@ -1,9 +1,6 @@
 package com.jimmy.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.Date;
@@ -14,7 +11,8 @@ import java.util.Date;
 public class Courses {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(name = "title", nullable = false)
     private String title;
@@ -26,7 +24,7 @@ public class Courses {
     private String cover;
 
     @Column(name = "course_pack_id")
-    private String coursePackId;
+    private Long coursePackId;
 
     @Column(name = "order", nullable = false)
     private Integer order;

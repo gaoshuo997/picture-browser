@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class StatementResp {
 
-    private String id;
+    private Long id;
 
     private Integer order;
 
@@ -15,5 +15,5 @@ public class StatementResp {
 
     private String soundmark;
 
-    private String courseId;
+    private Long courseId;
 }

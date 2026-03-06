@@ -1,9 +1,6 @@
 package com.jimmy.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.Date;
@@ -14,16 +11,17 @@ import java.util.Date;
 public class CourseHistory {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
     @Column(name = "course_id", nullable = false)
-    private String courseId;
+    private Long courseId;
 
     @Column(name = "course_pack_id", nullable = false)
-    private String coursePackId;
+    private Long coursePackId;
 
     @Column(name = "completion_count", nullable = false)
     private Integer completionCount;
