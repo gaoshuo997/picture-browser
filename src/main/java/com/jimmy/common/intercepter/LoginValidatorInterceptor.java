@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -72,6 +73,7 @@ public class LoginValidatorInterceptor implements HandlerInterceptor {
         result.setActionStatus(ActionStatus.FAIL);
         result.setData(content);
         response.getWriter().print(JacksonUtils.toJson(result));
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
         return false;
     }
 }

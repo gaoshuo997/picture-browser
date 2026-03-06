@@ -36,7 +36,7 @@ public class MenuServiceImpl implements MenuService {
         }
 
         Optional<UserRole> any = userRoles.stream()
-                .filter(userRole -> userRole.getRole().getRoleCode().equals(RoleCode.ADMIN)).findAny();
+                .filter(userRole -> userRole.getRole().getRoleCode().equals(RoleCode.ADMIN.toString())).findAny();
 
         // 如果是超级管理员则获取所有菜单
         if (any.isPresent()){

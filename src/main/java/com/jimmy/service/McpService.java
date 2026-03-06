@@ -1,6 +1,5 @@
 package com.jimmy.service;
 
-import com.jimmy.tools.StatementTools;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -47,7 +46,6 @@ public class McpService {
         return deepSeekChatClient.prompt(prompt)
                 .user(userInput)
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, sessionId))
-                .tools(new StatementTools())
                 .stream()
                 .content();
     }

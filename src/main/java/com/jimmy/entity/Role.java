@@ -18,8 +18,7 @@ public class Role {
     private String roleName;
 
     @Column(name = "role_code", nullable = false, length = 32)
-    @Enumerated(EnumType.STRING)
-    private RoleCode roleCode;
+    private String roleCode;
 
     @Column(name = "description", length = 128)
     private String  description;
@@ -32,5 +31,8 @@ public class Role {
 
     @Column(name = "delete_flag")
     private Integer deleteFlag;
+
+    @Column(name = "status")
+    private Integer status = 1;
 
 }

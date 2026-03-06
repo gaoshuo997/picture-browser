@@ -49,7 +49,7 @@ public class LoginController {
     @ResponseBody
     @PostMapping(value = "/login")
     public ApplicationResponseEntity<Map<String,Object>> login(
-            @RequestBody LoginUserReq req){
+            @Valid @RequestBody LoginUserReq req){
         SignUser signUser = signUserService.checkSignUser(req.getLoginName(), req.getPassword());
         Map<String, Object> resultMap = new HashMap<>(8);
         if (signUser != null){
@@ -90,5 +90,16 @@ public class LoginController {
         ApplicationResponseEntity<Map<String, Object>> applicationResponseEntity = new ApplicationResponseEntity<>();
         applicationResponseEntity.setData(content);
         return applicationResponseEntity;
+    }
+
+    @PostMapping("/logout")
+    public ApplicationResponseEntity <Map<String, String>> logout(HttpServletRequest request) {
+        String token = jwtTokenProvider.resolveToken(request);
+        // 后期改造为redis存储token
+        // redisTemplate.opsForSet().add("logout", token);
+        Map<String, String> data = Map.of("message", "退出登录成功");
+        ApplicationResponseEntity<Map<String, String>> result = new ApplicationResponseEntity<>();
+        result.setData(data);
+        return result;
     }
 }

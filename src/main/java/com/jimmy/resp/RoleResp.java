@@ -13,4 +13,6 @@ public class RoleResp {
     private String description;
 
     private String createAt;
+
+    private Integer status;
 }
