@@ -7,42 +7,22 @@ import java.util.List;
 @Data
 public class PaginatedApiResult<T> {
 
+    // 分页查询页码
     private Integer page;
 
+    // 分页查询个数
     private Integer pageSize;
 
+    // 当前页的元素个数
     private Integer count;
 
+    // 分页查询到的总元素数
     private Long total;
 
+    // 分页查询到的元素列表
     private List<T> list;
 
-    /**
-     * Constructor without total.
-     *
-     * @param page page index
-     * @param size page size
-     * @param count count
-     * @param data content
-     */
-    public PaginatedApiResult(Integer page, Integer size, Integer count, List<T> data) {
-        this(page, size, count, null, data);
-    }
+    // 页数
+    private Integer totalPages;
 
-    /**
-     * Constructor with total.
-     *
-     * @param page page index.
-     * @param size page size.
-     * @param count count in this page.
-     * @param total total count.
-     * @param data data.
-     */
-    public PaginatedApiResult(Integer page, Integer size, Integer count, Long total, List<T> data) {
-        this.page = page + 1;
-        this.pageSize = size;
-        this.count = count;
-        this.total = total;
-        this.list = data;
-    }
 }

@@ -15,9 +15,6 @@ public class CoursePacks {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "order", nullable = false)
-    private Integer order;
-
     @Column(name = "title", nullable = false)
     private String title;
 
@@ -32,9 +29,6 @@ public class CoursePacks {
 
     @Column(name = "creator_id", nullable = false)
     private Long creatorId;
-
-    @Column(name = "share_level")
-    private String shareLevel;
 
     @Column(name = "created_at")
     private Date createdAt;

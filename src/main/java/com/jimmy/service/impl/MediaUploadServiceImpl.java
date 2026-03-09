@@ -1,8 +1,8 @@
 package com.jimmy.service.impl;
 
 import com.jimmy.common.PaginatedApiResult;
-import com.jimmy.common.core.BadRequestException;
 import com.jimmy.common.exception.BadReqExceptionMsg;
+import com.jimmy.common.result.BusinessException;
 import com.jimmy.constant.UploadResultRecord;
 import com.jimmy.entity.Media;
 import com.jimmy.entity.enums.BucketName;
@@ -45,7 +45,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
     private StringRedisTemplate stringRedisTemplate;
 
     @Override
-    public Media uploadImage(MultipartFile multipartFile) {
+    public MediaResp uploadImage(MultipartFile multipartFile) {
         Date now = new Date();
         UploadResultRecord resultRecord = minioUtil.uploadImage(multipartFile, BucketName.MO_JING.getMsg());
         String originalFilename = multipartFile.getOriginalFilename();
@@ -62,7 +62,11 @@ public class MediaUploadServiceImpl implements MediaUploadService {
             media.setSize(multipartFile.getSize());
             media.setMediaType(MediaType.IMAGE);
             media.setBucketName(BucketName.MO_JING.getMsg());
-            return mediaRepository.save(media);
+            Media save = mediaRepository.save(media);
+
+            MediaResp resp = new MediaResp();
+            BeanUtils.copyProperties(save, resp);
+            return resp;
         } catch (RuntimeException e) {
             minioUtil.removeObject(BucketName.MO_JING.getMsg(), resultRecord.fileName());
             throw new RuntimeException("保存图片元信息失败");
@@ -89,8 +93,14 @@ public class MediaUploadServiceImpl implements MediaUploadService {
             resp.setCreateAt(DateUtils.format(media.getCreatedAt(),DateUtils.DATETIME_FORMAT));
             resultList.add(resp);
         }
-        return new PaginatedApiResult<>(pageable.getPageNumber(), pageable.getPageNumber(),
-                resultList.size(),resultList);
+        PaginatedApiResult<MediaResp> result = new PaginatedApiResult<>();
+        result.setPage(pageable.getPageNumber());
+        result.setPageSize(pageable.getPageSize());
+        result.setList(resultList);
+        result.setTotal(pageList.getTotalElements());
+        result.setCount(resultList.size());
+        result.setTotalPages(pageList.getTotalPages());
+        return result;
     }
 
     @Override
@@ -199,8 +209,8 @@ public class MediaUploadServiceImpl implements MediaUploadService {
     private Media checkMediaExistOrNot(Long id){
         Optional<Media> mediaOptional = mediaRepository.findById(id);
         if (mediaOptional.isEmpty()){
-            throw new BadRequestException(BadReqExceptionMsg.MEDIA_IS_NOT_EXIST.getCode(),
-                    BadReqExceptionMsg.MEDIA_IS_NOT_EXIST.getMessage(), BadReqExceptionMsg.MEDIA_IS_NOT_EXIST.getMessage());
+            throw new BusinessException(BadReqExceptionMsg.MEDIA_IS_NOT_EXIST.getCode(),
+                    BadReqExceptionMsg.MEDIA_IS_NOT_EXIST.getMessage());
         }
         return mediaOptional.get();
     }

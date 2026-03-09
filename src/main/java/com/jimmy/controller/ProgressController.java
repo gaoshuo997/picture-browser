@@ -1,6 +1,6 @@
 package com.jimmy.controller;
 
-import com.jimmy.common.web.ApplicationResponseEntity;
+import com.jimmy.common.result.Result;
 import com.jimmy.resp.LearningProgressResp;
 import com.jimmy.service.ProgressService;
 import com.jimmy.utils.UserUtils;
@@ -19,11 +19,9 @@ public class ProgressController {
     private ProgressService progressService;
 
     @GetMapping("/courses")
-    public ApplicationResponseEntity<List<LearningProgressResp>> getProgressList(){
+    public Result<List<LearningProgressResp>> getProgressList(){
         Long userId = UserUtils.getUserId();
         List<LearningProgressResp> progressList = progressService.getProgressList(userId);
-        ApplicationResponseEntity<List<LearningProgressResp>> result = new ApplicationResponseEntity<>();
-        result.setData(progressList);
-        return result;
+        return Result.success(progressList);
     }
 }

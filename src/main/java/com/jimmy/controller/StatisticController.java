@@ -1,6 +1,6 @@
 package com.jimmy.controller;
 
-import com.jimmy.common.web.ApplicationResponseEntity;
+import com.jimmy.common.result.Result;
 import com.jimmy.resp.StudyDurationResp;
 import com.jimmy.service.StatisticService;
 import jakarta.annotation.Resource;
@@ -18,36 +18,28 @@ public class StatisticController {
     private StatisticService statisticService;
 
     @GetMapping("/duration")
-    public ApplicationResponseEntity<List<StudyDurationResp>> getDuration(){
+    public Result<List<StudyDurationResp>> getDuration(){
         List<StudyDurationResp> duration = statisticService.getDuration();
-        ApplicationResponseEntity<List<StudyDurationResp>> result = new ApplicationResponseEntity<>();
-        result.setData(duration);
-        return result;
+        return Result.success(duration);
     }
 
     @GetMapping("/duration/today")
-    public ApplicationResponseEntity<StudyDurationResp> getDurationByDay(){
+    public Result<StudyDurationResp> getDurationByDay(){
         StudyDurationResp durationByDay = statisticService.getDurationByDay();
-        ApplicationResponseEntity<StudyDurationResp> result = new ApplicationResponseEntity<>();
-        result.setData(durationByDay);
-        return result;
+        return Result.success(durationByDay);
     }
 
     // 获取一周的学习时长
     @GetMapping("/duration/week")
-    public ApplicationResponseEntity<StudyDurationResp> getDurationByWeek(){
-        StudyDurationResp durationByDay = statisticService.getDurationByWeek();
-        ApplicationResponseEntity<StudyDurationResp> result = new ApplicationResponseEntity<>();
-        result.setData(durationByDay);
-        return result;
+    public Result<StudyDurationResp> getDurationByWeek(){
+        StudyDurationResp durationByWeek = statisticService.getDurationByWeek();
+        return Result.success(durationByWeek);
     }
 
     // 获取一月的学习时长
     @GetMapping("/duration/month")
-    public ApplicationResponseEntity<StudyDurationResp> getDurationByMonth(){
-        StudyDurationResp durationByDay = statisticService.getDurationByMonth();
-        ApplicationResponseEntity<StudyDurationResp> result = new ApplicationResponseEntity<>();
-        result.setData(durationByDay);
-        return result;
+    public Result<StudyDurationResp> getDurationByMonth(){
+        StudyDurationResp durationByMonth = statisticService.getDurationByMonth();
+        return Result.success(durationByMonth);
     }
 }

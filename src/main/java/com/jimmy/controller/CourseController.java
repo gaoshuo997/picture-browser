@@ -1,6 +1,6 @@
 package com.jimmy.controller;
 
-import com.jimmy.common.web.ApplicationResponseEntity;
+import com.jimmy.common.result.Result;
 import com.jimmy.resp.CourseResp;
 import com.jimmy.service.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,11 +14,9 @@ public class CourseController {
     private CourseService courseService;
 
     @GetMapping("/{id}")
-    public ApplicationResponseEntity<CourseResp> getDetail(
+    public Result<CourseResp> getDetail(
            @PathVariable("id") Long courseId){
         CourseResp fetch = courseService.fetch(courseId);
-        ApplicationResponseEntity<CourseResp> result = new ApplicationResponseEntity<>();
-        result.setData(fetch);
-        return result;
+        return Result.success(fetch);
     }
 }

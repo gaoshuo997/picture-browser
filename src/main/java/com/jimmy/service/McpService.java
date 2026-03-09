@@ -1,5 +1,6 @@
 package com.jimmy.service;
 
+import com.jimmy.resp.AIChatResp;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -29,7 +30,7 @@ public class McpService {
     @Value("classpath:prompts/translator.st")
     private Resource translatorResource;
 
-    public Flux<String> chatWithMemory(String sessionId, String userInput) {
+    public AIChatResp chatWithMemory(String sessionId, String userInput) {
         SystemPromptTemplate systemPromptTemplate = new SystemPromptTemplate(translatorResource);
 
         // 这里的value后面改成可配置的，目前写死
@@ -43,11 +44,14 @@ public class McpService {
         log.info("systemMessage====:{}",systemMessage.getText());
         Prompt prompt = new Prompt(systemMessage);
 
-        return deepSeekChatClient.prompt(prompt)
+        String content = deepSeekChatClient.prompt(prompt)
                 .user(userInput)
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, sessionId))
-                .stream()
-                .content();
+                .call().content();
+        AIChatResp resp = new AIChatResp();
+        resp.setSessionId(sessionId);
+        resp.setResponse(content);
+        return resp;
     }
 
     /**

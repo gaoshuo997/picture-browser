@@ -1,7 +1,6 @@
 package com.jimmy.service.impl;
 
 import com.jimmy.common.PaginatedApiResult;
-import com.jimmy.common.core.BadRequestException;
 import com.jimmy.entity.Menu;
 import com.jimmy.entity.Role;
 import com.jimmy.entity.RoleMenu;
@@ -56,8 +55,14 @@ public class RoleServiceImpl implements RoleService {
             return resp;
         }).toList();
 
-        return new PaginatedApiResult<>(page - 1, pageSize,
-                respList.size(), respList);
+        PaginatedApiResult<RoleResp> result = new PaginatedApiResult<>();
+        result.setPage(pageable.getPageNumber());
+        result.setPageSize(pageable.getPageSize());
+        result.setList(respList);
+        result.setTotal(rolePage.getTotalElements());
+        result.setCount(respList.size());
+        result.setTotalPages(rolePage.getTotalPages());
+        return result;
     }
 
     @Override

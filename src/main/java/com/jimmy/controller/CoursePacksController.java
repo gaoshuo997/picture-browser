@@ -1,6 +1,6 @@
 package com.jimmy.controller;
 
-import com.jimmy.common.web.ApplicationResponseEntity;
+import com.jimmy.common.result.Result;
 import com.jimmy.resp.CoursePacksResp;
 import com.jimmy.service.CoursePacksService;
 import jakarta.validation.constraints.NotNull;
@@ -20,19 +20,15 @@ public class CoursePacksController {
     private CoursePacksService coursePacksService;
 
     @GetMapping("/list")
-    public ApplicationResponseEntity<List<CoursePacksResp>> getList() {
+    public Result<List<CoursePacksResp>> getList() {
         List<CoursePacksResp> list = coursePacksService.list();
-        ApplicationResponseEntity<List<CoursePacksResp>> result = new ApplicationResponseEntity<>();
-        result.setData(list);
-        return result;
+        return Result.success(list);
     }
 
     @GetMapping("/fetch/{id}")
-    public ApplicationResponseEntity<CoursePacksResp> fetchCoursePack(
+    public Result<CoursePacksResp> fetchCoursePack(
             @PathVariable @NotNull(message = "id不能为空") Long id) {
         CoursePacksResp coursePacksResp = coursePacksService.fetch(id);
-        ApplicationResponseEntity<CoursePacksResp> result = new ApplicationResponseEntity<>();
-        result.setData(coursePacksResp);
-        return result;
+        return Result.success(coursePacksResp);
     }
 }

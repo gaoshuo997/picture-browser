@@ -1,18 +1,14 @@
 package com.jimmy.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jimmy.common.web.ApplicationResponseEntity;
+import com.jimmy.common.result.Result;
 import com.jimmy.entity.SignUser;
-import com.jimmy.entity.UserInfo;
 import com.jimmy.jwt.JwtTokenProvider;
 import com.jimmy.req.LoginUserReq;
 import com.jimmy.req.SignUserReq;
 import com.jimmy.service.SignUserService;
-import com.jimmy.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -30,28 +26,31 @@ public class LoginController {
 
     @ResponseBody
     @PostMapping(value = "/register")
-    public ApplicationResponseEntity<Map<String, Object>> signUp(@Valid @RequestBody SignUserReq req) {
+    public Result<Map<String,Object>> signUp(@Valid @RequestBody SignUserReq req) {
         SignUser saved = signUserService.insertSignUser(req);
-        Map<String, Object> resultMap = new HashMap<>(8);
         if (saved != null){
+            Map<String, Object> resultMap = new HashMap<>(4);
+            Map<String, Object> extraClaims = new HashMap<>(2);
+            extraClaims.put("userId", saved.getId());
+            extraClaims.put("loginName", saved.getLoginName());
+            String token = jwtTokenProvider.generateToken(saved.getId(), extraClaims);
+            resultMap.put("token",token);
             resultMap.put("result", true);
-            resultMap.put("message", "注册成功");
-//            resultMap.put("user", saved);
+            resultMap.put("message", "登录成功");
+            resultMap.put("user", saved);
+
+            return Result.success(resultMap);
         }else {
-            resultMap.put("result", false);
-            resultMap.put("message", "注册失败");
+            return Result.failed();
         }
-        ApplicationResponseEntity<Map<String, Object>> responseEntity = new ApplicationResponseEntity<>();
-        responseEntity.setData(resultMap);
-        return responseEntity;
     }
 
     @ResponseBody
     @PostMapping(value = "/login")
-    public ApplicationResponseEntity<Map<String,Object>> login(
+    public Result<Map<String,Object>> login(
             @Valid @RequestBody LoginUserReq req){
         SignUser signUser = signUserService.checkSignUser(req.getLoginName(), req.getPassword());
-        Map<String, Object> resultMap = new HashMap<>(8);
+        Map<String, Object> resultMap = new HashMap<>(4);
         if (signUser != null){
             Map<String, Object> extraClaims = new HashMap<>(2);
             extraClaims.put("userId", signUser.getId());
@@ -62,15 +61,13 @@ public class LoginController {
             resultMap.put("message", "登录成功");
             resultMap.put("user", signUser);
         }
-        ApplicationResponseEntity<Map<String,Object>> result = new ApplicationResponseEntity<>();
-        result.setData(resultMap);
-        return result;
+        return Result.success(resultMap);
     }
 
     // token
     @ResponseBody
     @PostMapping(value = "/auth-token")
-    public ApplicationResponseEntity<Map<String, Object>> auth(HttpServletRequest request) {
+    public Result<Map<String, Object>> auth(HttpServletRequest request) {
         String token = jwtTokenProvider.resolveToken(request);
         Map<String, Object> content = new HashMap<>();
         content.put("result", false);
@@ -87,19 +84,14 @@ public class LoginController {
                 content.put("message", "登录认证成功");
             }
         }
-        ApplicationResponseEntity<Map<String, Object>> applicationResponseEntity = new ApplicationResponseEntity<>();
-        applicationResponseEntity.setData(content);
-        return applicationResponseEntity;
+        return Result.success(content);
     }
 
     @PostMapping("/logout")
-    public ApplicationResponseEntity <Map<String, String>> logout(HttpServletRequest request) {
+    public Result<?> logout(HttpServletRequest request) {
         String token = jwtTokenProvider.resolveToken(request);
         // 后期改造为redis存储token
         // redisTemplate.opsForSet().add("logout", token);
-        Map<String, String> data = Map.of("message", "退出登录成功");
-        ApplicationResponseEntity<Map<String, String>> result = new ApplicationResponseEntity<>();
-        result.setData(data);
-        return result;
+        return Result.success();
     }
 }

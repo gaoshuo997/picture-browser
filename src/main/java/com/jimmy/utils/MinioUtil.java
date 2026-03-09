@@ -1,7 +1,7 @@
 package com.jimmy.utils;
 
-import com.jimmy.common.core.BadRequestException;
 import com.jimmy.common.exception.BadReqExceptionMsg;
+import com.jimmy.common.result.BusinessException;
 import com.jimmy.constant.UploadResultRecord;
 import com.jimmy.entity.enums.MediaType;
 import io.minio.*;
@@ -48,11 +48,11 @@ public class MinioUtil {
     public UploadResultRecord uploadImage(@NotNull MultipartFile multipartFile, String bucketName) {
         // 1. 校验文件是否为空
         if (multipartFile.isEmpty()) {
-            throw new BadRequestException(BadReqExceptionMsg.UPLOAD_IMG_IS_NULL.getCode(),BadReqExceptionMsg.UPLOAD_IMG_IS_NULL.getMessage(),
+            throw new BusinessException(BadReqExceptionMsg.UPLOAD_IMG_IS_NULL.getCode(),
                     BadReqExceptionMsg.UPLOAD_IMG_IS_NULL.getMessage());
         }
         if (bucketName.isEmpty()){
-            throw new BadRequestException(BadReqExceptionMsg.BUCKET_NAME_IS_NULL.getCode(),BadReqExceptionMsg.BUCKET_NAME_IS_NULL.getMessage(),
+            throw new BusinessException(BadReqExceptionMsg.BUCKET_NAME_IS_NULL.getCode(),
                     BadReqExceptionMsg.BUCKET_NAME_IS_NULL.getMessage());
         }
 
@@ -75,7 +75,8 @@ public class MinioUtil {
             );
 
             // 5. 生成并返回文件完整访问地址
-            String fileAccessUrl = getFileAccessUrl(fileName, bucketName);
+//            String fileAccessUrl = getFileAccessUrl(fileName, bucketName);
+            String fileAccessUrl = getPresignedObjectUrl(bucketName, fileName);
             log.info("图片上传成功，文件名：{}，访问地址：{}", fileName, fileAccessUrl);
             return new UploadResultRecord(fileAccessUrl, fileName);
 
@@ -101,7 +102,7 @@ public class MinioUtil {
      */
     public void createBucketIfNotExists(String bucketName){
         if (bucketName.isEmpty()){
-            throw new BadRequestException(BadReqExceptionMsg.BUCKET_NAME_IS_NULL.getCode(),BadReqExceptionMsg.BUCKET_NAME_IS_NULL.getMessage(),
+            throw new BusinessException(BadReqExceptionMsg.BUCKET_NAME_IS_NULL.getCode(),
                     BadReqExceptionMsg.BUCKET_NAME_IS_NULL.getMessage());
         }
         try {
@@ -125,15 +126,15 @@ public class MinioUtil {
         log.info("文件后缀名:{}",suffixName);
         if (type.equals(MediaType.IMAGE)){
             if (imageTypeList.contains(suffixName)){
-                throw new BadRequestException(BadReqExceptionMsg.UPLOAD_IMG_TYPE_ERROR.getCode(),
-                        BadReqExceptionMsg.UPLOAD_IMG_TYPE_ERROR.getMessage(), BadReqExceptionMsg.UPLOAD_IMG_TYPE_ERROR.getMessage());
+                throw new BusinessException(BadReqExceptionMsg.UPLOAD_IMG_TYPE_ERROR.getCode(),
+                        BadReqExceptionMsg.UPLOAD_IMG_TYPE_ERROR.getMessage());
 
             }
         }
         if (type.equals(MediaType.VIDEO)){
             if (videoTypeList.contains(suffixName)){
-                throw new BadRequestException(BadReqExceptionMsg.UPLOAD_VIDEO_TYPE_ERROR.getCode(),
-                        BadReqExceptionMsg.UPLOAD_VIDEO_TYPE_ERROR.getMessage(), BadReqExceptionMsg.UPLOAD_VIDEO_TYPE_ERROR.getMessage());
+                throw new BusinessException(BadReqExceptionMsg.UPLOAD_VIDEO_TYPE_ERROR.getCode(),
+                        BadReqExceptionMsg.UPLOAD_VIDEO_TYPE_ERROR.getMessage());
 
             }
         }
@@ -155,7 +156,7 @@ public class MinioUtil {
         } catch (Exception minioDelE) {
             // 记录Minio删除失败的日志，避免吞掉原始异常
             log.error("Minio文件回滚删除失败，对象名：{}，原因：{}", objectName, minioDelE.getMessage(), minioDelE);
-            throw new BadRequestException(BadReqExceptionMsg.REMOVE_OBJECT_ERROR.getCode(), BadReqExceptionMsg.REMOVE_OBJECT_ERROR.getMessage(),
+            throw new BusinessException(BadReqExceptionMsg.REMOVE_OBJECT_ERROR.getCode(),
                     BadReqExceptionMsg.REMOVE_OBJECT_ERROR.getMessage());
         }
     }
@@ -268,7 +269,7 @@ public class MinioUtil {
                     .expiry(expireTime)
                     .build());
         }catch (Exception e){
-            throw new BadRequestException(BadReqExceptionMsg.PRE_SIGNED_ERROR.getCode(), BadReqExceptionMsg.PRE_SIGNED_ERROR.getMessage(),
+            throw new BusinessException(BadReqExceptionMsg.PRE_SIGNED_ERROR.getCode(),
                     BadReqExceptionMsg.PRE_SIGNED_ERROR.getMessage());
         }
     }

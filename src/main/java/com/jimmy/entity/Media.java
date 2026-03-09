@@ -27,7 +27,7 @@ public class Media {
     @Column(name = "object_name", nullable = false)
     private String objectName;
 
-    @Column(name = "url", nullable = false)
+    @Column(name = "url", nullable = false, length = 2048)
     private String url;
 
     @Column(name = "thumbnail")

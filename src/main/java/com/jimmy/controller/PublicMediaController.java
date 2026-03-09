@@ -1,7 +1,7 @@
 package com.jimmy.controller;
 
 import com.jimmy.common.PaginatedApiResult;
-import com.jimmy.common.web.ApplicationResponseEntity;
+import com.jimmy.common.result.Result;
 import com.jimmy.entity.enums.MediaType;
 import com.jimmy.resp.MediaResp;
 import com.jimmy.service.MediaUploadService;
@@ -17,7 +17,7 @@ public class PublicMediaController {
     private MediaUploadService mediaUploadService;
 
     @GetMapping("/media/list")
-    public ApplicationResponseEntity<PaginatedApiResult<MediaResp>> list(
+    public Result<PaginatedApiResult<MediaResp>> list(
             @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
             @RequestParam(value = "pageSize", required = false, defaultValue = "20") Integer size){
         page = page >= 1 ? page : 1;
@@ -25,26 +25,20 @@ public class PublicMediaController {
         // 公共接口只能获取最大20条图片
         size = 0 <= size && size <= 20 ? size : 20;
         PaginatedApiResult<MediaResp> pageResult = mediaUploadService.publicList(page, size, MediaType.IMAGE.toString());
-        ApplicationResponseEntity<PaginatedApiResult<MediaResp>> result = new ApplicationResponseEntity<>();
-        result.setData(pageResult);
-        return result;
+        return Result.success(pageResult);
     }
 
     @GetMapping("/media/{id}")
-    public ApplicationResponseEntity<MediaResp> getDetail(
+    public Result<MediaResp> getDetail(
             @PathVariable @NotNull(message = "媒体的id不能为空") Long id){
-        ApplicationResponseEntity<MediaResp> result = new ApplicationResponseEntity<>();
         MediaResp detail = mediaUploadService.getDetail(id);
-        result.setData(detail);
-        return result;
+        return Result.success(detail);
     }
 
     @GetMapping("/media/presignedUrl/{id}")
-    public ApplicationResponseEntity<String> getPreSignedUrl(
+    public Result<String> getPreSignedUrl(
             @PathVariable @NotNull(message = "媒体的id不能为空") Long id){
         String presignedUrl = mediaUploadService.getPresignedUrl(id);
-        ApplicationResponseEntity<String> result = new ApplicationResponseEntity<>();
-        result.setData(presignedUrl);
-        return result;
+        return Result.success(presignedUrl);
     }
 }

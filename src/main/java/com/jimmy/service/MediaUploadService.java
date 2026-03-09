@@ -8,7 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface MediaUploadService {
 
-    Media uploadImage(MultipartFile multipartFile);
+    MediaResp uploadImage(MultipartFile multipartFile);
 
     PaginatedApiResult<MediaResp> list(Integer page, Integer size, String type);
 

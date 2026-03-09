@@ -16,6 +16,7 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,9 +41,13 @@ public class StatisticServiceImpl implements StatisticService {
         UserLearnRecord record = userLearnRecordRepository
                 .findByDayAndUserId(LocalDate.now(), UserUtils.getUserId());
         StudyDurationResp resp = new StudyDurationResp();
-        resp.setDuration(record.getDuration());
-        resp.setDate(record.getDay().format(DateTimeFormatter.ISO_DATE));
-        resp.setUserId(UserUtils.getUserId());
+        if (Objects.isNull(record)){
+            resp.setDuration(0);
+            resp.setDate(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
+        }else {
+            resp.setDuration(record.getDuration());
+            resp.setDate(record.getDay().format(DateTimeFormatter.ISO_DATE));
+        }
         return resp;
     }
 
@@ -55,8 +60,12 @@ public class StatisticServiceImpl implements StatisticService {
         StudyDurationResp resp = new StudyDurationResp();
         List<UserLearnRecord> betweenWeek = userLearnRecordRepository.findByUserIdAndDayBetween(UserUtils.getUserId(),
                 startOfWeek, today);
-        Integer totalDuration = betweenWeek.stream().mapToInt(UserLearnRecord::getDuration).sum();
-        resp.setDuration(totalDuration);
+        if (Objects.isNull(betweenWeek) || betweenWeek.isEmpty()){
+            resp.setDuration(0);
+        }else {
+            Integer totalDuration = betweenWeek.stream().mapToInt(UserLearnRecord::getDuration).sum();
+            resp.setDuration(totalDuration);
+        }
         return resp;
     }
 
@@ -67,9 +76,13 @@ public class StatisticServiceImpl implements StatisticService {
         LocalDate firstDayOfMonth = today.with(TemporalAdjusters.firstDayOfMonth());
         List<UserLearnRecord> betweenMonth = userLearnRecordRepository.findByUserIdAndDayBetween(UserUtils.getUserId(),
                 firstDayOfMonth, today);
-        Integer totalDuration = betweenMonth.stream().mapToInt(UserLearnRecord::getDuration).sum();
         StudyDurationResp resp = new StudyDurationResp();
-        resp.setDuration(totalDuration);
+        if (Objects.isNull(betweenMonth) || betweenMonth.isEmpty()){
+            resp.setDuration(0);
+        }else {
+            Integer totalDuration = betweenMonth.stream().mapToInt(UserLearnRecord::getDuration).sum();
+            resp.setDuration(totalDuration);
+        }
         return resp;
     }
 

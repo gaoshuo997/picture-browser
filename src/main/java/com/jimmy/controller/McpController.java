@@ -1,9 +1,12 @@
 package com.jimmy.controller;
 
+import com.jimmy.common.result.Result;
+import com.jimmy.req.AIChatReq;
+import com.jimmy.resp.AIChatResp;
 import com.jimmy.service.McpService;
 import jakarta.annotation.Resource;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
 
 @RestController
 @RequestMapping("/chat")
@@ -13,16 +16,15 @@ public class McpController {
     private McpService mcpService;
 
     @PostMapping("/generate")
-    public Flux<String> chat(
-            @RequestParam String sessionId,
-            @RequestParam String userInput) {
-        return mcpService.chatWithMemory(sessionId, userInput);
+    public Result<AIChatResp> chat(
+            @Valid @RequestBody AIChatReq req) {
+        return Result.success(mcpService.chatWithMemory(req.getSessionId(), req.getUserInput()));
     }
 
     // 清空对话记录
     @DeleteMapping("/clear")
-    public String clear(@RequestParam String sessionId){
+    public Result<?> clear(@RequestParam String sessionId){
         mcpService.clearMemory(sessionId);
-        return "SUCCESS";
+        return Result.success();
     }
 }

@@ -1,9 +1,7 @@
 package com.jimmy.common.intercepter;
 
-import com.jimmy.common.exception.ErrorMsg;
-import com.jimmy.common.web.ActionStatus;
-import com.jimmy.common.web.ApplicationErrorResponseEntity;
-import com.jimmy.common.web.ApplicationResponseEntity;
+import com.jimmy.common.result.Result;
+import com.jimmy.common.result.ResultCode;
 import com.jimmy.entity.SignUser;
 import com.jimmy.jwt.JwtTokenProvider;
 import com.jimmy.service.SignUserService;
@@ -65,14 +63,7 @@ public class LoginValidatorInterceptor implements HandlerInterceptor {
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        ApplicationErrorResponseEntity content = new ApplicationErrorResponseEntity();
-//        content.setNumericErrorCode(UnauthorizedErrorCode.NOT_LOGIN.getErrorCode());
-//        content.setErrorCode(UnauthorizedErrorCode.NOT_LOGIN.getError());
-        content.setMessage(ErrorMsg.NOT_LOGIN.getMsg());
-        ApplicationResponseEntity<ApplicationErrorResponseEntity> result = new ApplicationResponseEntity<>();
-        result.setActionStatus(ActionStatus.FAIL);
-        result.setData(content);
-        response.getWriter().print(JacksonUtils.toJson(result));
+        response.getWriter().print(JacksonUtils.toJson(Result.failed(ResultCode.UNAUTHORIZED)));
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         return false;
     }

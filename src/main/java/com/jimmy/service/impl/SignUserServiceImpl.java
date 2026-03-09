@@ -1,7 +1,7 @@
 package com.jimmy.service.impl;
 
-import com.jimmy.common.core.BadRequestException;
 import com.jimmy.common.exception.BadReqExceptionMsg;
+import com.jimmy.common.result.BusinessException;
 import com.jimmy.entity.SignUser;
 import com.jimmy.mapperStruct.SignUserMapper;
 import com.jimmy.repository.SignUserRepository;
@@ -12,7 +12,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
-import java.util.List;
 
 @Service
 public class SignUserServiceImpl implements SignUserService {
@@ -30,20 +29,20 @@ public class SignUserServiceImpl implements SignUserService {
     public SignUser insertSignUser(SignUserReq req) {
         long signUserNumber = signUserRepository.count();
         if (signUserNumber >= 1000){
-            throw new BadRequestException(BadReqExceptionMsg.SIGN_NUM_OVER.getCode(),
-                    BadReqExceptionMsg.SIGN_NUM_OVER.getMessage(), BadReqExceptionMsg.SIGN_NUM_OVER.getMessage());
+            throw new BusinessException(BadReqExceptionMsg.SIGN_NUM_OVER.getCode(),
+                    BadReqExceptionMsg.SIGN_NUM_OVER.getMessage());
         }
         Long countByLoginName = signUserRepository
                 .countSignUsersByLoginNameIgnoreCaseAndDeleteFlag(req.getLoginName().trim(),0);
         if (countByLoginName !=0 ){
-            throw  new BadRequestException(BadReqExceptionMsg.SIGN_ALREADY_EXIST.getCode(),
-                    BadReqExceptionMsg.SIGN_ALREADY_EXIST.getMessage(), BadReqExceptionMsg.SIGN_ALREADY_EXIST.getMessage());
+            throw  new BusinessException(BadReqExceptionMsg.SIGN_ALREADY_EXIST.getCode(),
+                    BadReqExceptionMsg.SIGN_ALREADY_EXIST.getMessage());
         }
         Long countByEmail = signUserRepository
                 .countSignUsersByEmailIgnoreCaseAndDeleteFlag(req.getEmail().trim(),0);
         if (countByEmail != 0){
-            throw  new BadRequestException(BadReqExceptionMsg.SiGN_EMAIL_EXIST.getCode(),
-                    BadReqExceptionMsg.SiGN_EMAIL_EXIST.getMessage(), BadReqExceptionMsg.SiGN_EMAIL_EXIST.getMessage());
+            throw  new BusinessException(BadReqExceptionMsg.SiGN_EMAIL_EXIST.getCode(),
+                    BadReqExceptionMsg.SiGN_EMAIL_EXIST.getMessage());
         }
         req.setPassword(passwordEncoder.encode(req.getPassword()));
         SignUser signUser = signUserMapper.reqToEntity(req);
@@ -65,12 +64,12 @@ public class SignUserServiceImpl implements SignUserService {
     public SignUser checkSignUser(String loginUserName, String password) {
         SignUser signUser = signUserRepository.findSignUserByLoginNameIgnoreCaseAndDeleteFlag(loginUserName, 0);
         if (signUser == null){
-            throw new BadRequestException(BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getCode(),
-                    BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getMessage(), BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getMessage());
+            throw new BusinessException(BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getCode(),
+                    BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getMessage());
         }
         if (!passwordEncoder.matches(password, signUser.getPassword())){
-            throw new BadRequestException(BadReqExceptionMsg.PASSWORD_ERROR.getCode(),
-                    BadReqExceptionMsg.PASSWORD_ERROR.getMessage(), BadReqExceptionMsg.PASSWORD_ERROR.getMessage());
+            throw new BusinessException(BadReqExceptionMsg.PASSWORD_ERROR.getCode(),
+                    BadReqExceptionMsg.PASSWORD_ERROR.getMessage());
         }
         return signUser;
     }
