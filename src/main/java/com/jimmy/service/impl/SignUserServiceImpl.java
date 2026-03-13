@@ -5,6 +5,7 @@ import com.jimmy.common.exception.BadReqExceptionMsg;
 import com.jimmy.common.result.BusinessException;
 import com.jimmy.constant.DeleteFlag;
 import com.jimmy.constant.PredicateFieldName;
+import com.jimmy.constant.StatusFlag;
 import com.jimmy.entity.Role;
 import com.jimmy.entity.SignUser;
 import com.jimmy.entity.UserRole;
@@ -31,10 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -79,6 +77,11 @@ public class SignUserServiceImpl implements SignUserService {
         return signUserRepository.save(signUser);
     }
 
+    /**
+     * 根据ID查询没有被删除的用户，禁用的用户也可被查到
+     * @param id 用户ID
+     * @return 用户
+     */
     @Override
     public SignUser findSignUserById(Long id) {
         if (id != null){
@@ -89,7 +92,7 @@ public class SignUserServiceImpl implements SignUserService {
 
     @Override
     public SignUser checkSignUser(String loginUserName, String password) {
-        SignUser signUser = signUserRepository.findSignUserByLoginNameIgnoreCaseAndDeleteFlag(loginUserName, DeleteFlag.NORMAL.getFlag());
+        SignUser signUser = signUserRepository.findSignUserByLoginNameIgnoreCaseAndStatus(loginUserName, StatusFlag.VALID.getFlag());
         if (signUser == null){
             throw new BusinessException(BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getCode(),
                     BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getMessage());
@@ -135,6 +138,8 @@ public class SignUserServiceImpl implements SignUserService {
     public void deleteById(Long id) {
         SignUser signUser = checkUserIsExist(id);
         signUser.setDeleteFlag(DeleteFlag.DELETE.getFlag());
+        signUser.setUpdatedAt(LocalDateTime.now());
+        signUser.setStatus(StatusFlag.INVALID.getFlag());
         signUserRepository.save(signUser);
         userRoleRepository.deleteUserRoleByUserId(id);
     }
@@ -143,6 +148,7 @@ public class SignUserServiceImpl implements SignUserService {
     public void update(Long id, SignUserSave save) {
         SignUser signUser = checkUserIsExist(id);
         BeanUtils.copyProperties(save,signUser);
+        signUser.setUpdatedAt(LocalDateTime.now());
         signUserRepository.save(signUser);
     }
 
@@ -161,15 +167,15 @@ public class SignUserServiceImpl implements SignUserService {
             return List.of();
         }
 
-        List<Role> allRoleById = roleRepository.findAllById(byUserId.stream()
-                .map(UserRole::getRoleId).collect(Collectors.toSet()));
+        List<Role> allRoleById = roleRepository.findAllByIdInAndStatus(byUserId.stream()
+                .map(UserRole::getRoleId).collect(Collectors.toSet()), StatusFlag.VALID.getFlag());
         // 查看用户是否拥有超级管理员权限
         Optional<Role> any = allRoleById.stream()
                 .filter(role -> role.getRoleCode().equals(RoleCode.ADMIN.toString())).findAny();
 
         // 超级管理员拥有所有角色列表
         if (any.isPresent()){
-            return roleRepository.findAll().stream().map(role -> {
+            return roleRepository.findRoleByStatus(StatusFlag.VALID.getFlag()).stream().map(role -> {
                 RoleResp resp = new RoleResp();
                 BeanUtils.copyProperties(role, resp);
                 return resp;
@@ -204,12 +210,26 @@ public class SignUserServiceImpl implements SignUserService {
         }
     }
 
+    @Override
+    public void setStatus(Long id) {
+        SignUser signUser = checkUserIsExist(id);
+        if (Objects.equals(signUser.getStatus(), StatusFlag.VALID.getFlag())){
+            signUser.setStatus(StatusFlag.INVALID.getFlag());
+        }else {
+            signUser.setStatus(StatusFlag.VALID.getFlag());
+        }
+        signUser.setUpdatedAt(LocalDateTime.now());
+        signUserRepository.save(signUser);
+    }
+
 
     /**
-     * 检查角色是否存在
+     * 检查用户是否没被删除和没被禁用
+     * @param id 用户ID
+     * @return 用户
      */
     private SignUser checkUserIsExist(Long id){
-        return signUserRepository.findById(id).orElseThrow(() ->
+        return signUserRepository.findByIdAndStatus(id, StatusFlag.VALID.getFlag()).orElseThrow(() ->
                 new BusinessException(BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getCode(),
                         BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getMessage()));
     }
@@ -240,6 +260,7 @@ public class SignUserServiceImpl implements SignUserService {
             if (endDate != null){
                 predicates.add(cb.lessThanOrEqualTo(root.get(PredicateFieldName.CREATED_AT.getName()), endDate));
             }
+            predicates.add(cb.equal(root.get(PredicateFieldName.DELETE_FLAG.getName()), DeleteFlag.NORMAL.getFlag()));
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }

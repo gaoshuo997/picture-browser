@@ -82,7 +82,7 @@ public class RoleServiceImpl implements RoleService {
     public void assignMenus(RoleMenuSave save) {
         Role role = checkRoleIsExist(save.getRoleId());
         List<Long> distinctMenuIds = save.getMenuIds().stream().distinct().toList();
-        List<Menu> menuListByIdIn = menuRepository.findByIdInAndDeleteFlag(distinctMenuIds,0);
+        List<Menu> menuListByIdIn = menuRepository.findByIdInAndDeleteFlag(distinctMenuIds,DeleteFlag.NORMAL.getFlag());
         if (menuListByIdIn.size() != distinctMenuIds.size()){
             throw new RuntimeException("存在非法的菜单ID");
         }
@@ -125,8 +125,12 @@ public class RoleServiceImpl implements RoleService {
 
         // 删除角色菜单
         roleMenuRepository.deleteByRoleId(id);
+
         // 删除角色
-        roleRepository.delete(role);
+        role.setDeleteFlag(DeleteFlag.DELETE.getFlag());
+        role.setStatus(StatusFlag.INVALID.getFlag());
+        role.setUpdateAt(LocalDateTime.now());
+        roleRepository.save(role);
     }
 
     @Override
@@ -179,7 +183,7 @@ public class RoleServiceImpl implements RoleService {
      * 检查角色是否存在
      */
     private Role checkRoleIsExist(Long id){
-        return roleRepository.findById(id).orElseThrow(() ->
+        return roleRepository.findRoleByIdAndStatus(id,StatusFlag.VALID.getFlag()).orElseThrow(() ->
                 new RuntimeException("角色不存在"));
     }
 }

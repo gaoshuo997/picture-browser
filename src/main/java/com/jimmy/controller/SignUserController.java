@@ -93,4 +93,14 @@ public class SignUserController {
         signUserService.assignRoles(id, dto.getRoleIds());
         return Result.success();
     }
+
+    /**
+     * 禁用用户/启用用户
+     * @param id 用户ID
+     */
+    @PutMapping("/{id}/setStatus")
+    public Result<Void> setStatus(@PathVariable @NotNull(message = "用户ID不能为空") Long id){
+        signUserService.setStatus(id);
+        return Result.success();
+    }
 }

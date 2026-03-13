@@ -15,7 +15,7 @@ public enum BadReqExceptionMsg {
 
     PASSWORD_ERROR(40004,"密码错误"),
 
-    SIGN_USER_NOT_EXIST(40005,"该用户不存在"),
+    SIGN_USER_NOT_EXIST(40005,"该用户不存在或被禁用"),
 
     UPLOAD_IMG_IS_NULL(40006,"上传文件为空！"),
 

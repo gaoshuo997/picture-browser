@@ -15,4 +15,6 @@ public class SignUserResp {
     private String createdAt;
 
     private String updatedAt;
+
+    private Integer status;
 }

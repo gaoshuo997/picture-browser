@@ -1,5 +1,7 @@
 package com.jimmy.security;
 
+import com.jimmy.common.exception.BadReqExceptionMsg;
+import com.jimmy.common.result.BusinessException;
 import com.jimmy.constant.StatusFlag;
 import com.jimmy.entity.SignUser;
 import com.jimmy.resp.RoleResp;
@@ -55,10 +57,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
 
         // 检查用户状态 (假设 status 为 0 表示禁用，deleteFlag为1表示已删除)
-        if (user.getStatus() != null &&
-            (StatusFlag.VALID.getFlag().equals(user.getStatus()) || user.getDeleteFlag().equals(1))) {
+        if (user.getStatus() != null && StatusFlag.INVALID.getFlag().equals(user.getStatus())) {
             log.warn("用户已被禁用 - userId: {}", userId);
-            throw new UsernameNotFoundException("用户已被禁用");
+            throw new BusinessException(BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getCode(),
+                    BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getMessage());
+//            throw new UsernameNotFoundException("用户已被禁用");
         }
 
         // 获取用户角色列表

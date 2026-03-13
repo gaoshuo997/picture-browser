@@ -9,6 +9,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface RoleRepository extends JpaRepository<Role, Long>, JpaSpecificationExecutor<Role> {
@@ -22,4 +24,10 @@ public interface RoleRepository extends JpaRepository<Role, Long>, JpaSpecificat
             "WHERE r.id IN :roleIds " +
             "GROUP BY r.id", nativeQuery = true)
     List<RoleMenuCountDTO> countMenusPerRole(@Param("roleIds") List<Long> roleIds);
+
+    List<Role> findAllByIdInAndStatus(Set<Long> id, Integer status);
+
+    List<Role> findRoleByStatus(Integer status);
+
+    Optional<Role> findRoleByIdAndStatus(Long id, Integer status);
 }

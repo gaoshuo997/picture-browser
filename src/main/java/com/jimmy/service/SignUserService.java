@@ -27,4 +27,6 @@ public interface SignUserService {
     List<RoleResp> getRolesByOwner(Long id);
 
     void assignRoles(Long id, Set<Long> roleIds);
+
+    void setStatus(Long id);
 }
