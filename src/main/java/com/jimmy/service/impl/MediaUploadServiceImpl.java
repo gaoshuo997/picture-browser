@@ -3,6 +3,7 @@ package com.jimmy.service.impl;
 import com.jimmy.common.PaginatedApiResult;
 import com.jimmy.common.exception.BadReqExceptionMsg;
 import com.jimmy.common.result.BusinessException;
+import com.jimmy.constant.PredicateFieldName;
 import com.jimmy.constant.UploadResultRecord;
 import com.jimmy.entity.Media;
 import com.jimmy.entity.enums.BucketName;
@@ -78,7 +79,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
     @Override
     public PaginatedApiResult<MediaResp> list(Integer page, Integer size, String type) {
         Pageable pageable = PageRequest.of(page - 1, size,
-                Sort.by(Sort.Direction.DESC, "id"));
+                Sort.by(Sort.Direction.DESC, PredicateFieldName.ID.getName()));
         MediaReq req = new MediaReq();
         if (type != null && !type.isEmpty()){
             req.setMediaType(type);
@@ -186,10 +187,10 @@ public class MediaUploadServiceImpl implements MediaUploadService {
             // 存储查询条件的集合
             List<Predicate> predicates = new ArrayList<>();
             if (req.getMediaType() != null && !req.getMediaType().isEmpty()){
-                predicates.add(cb.equal(root.get("mediaType"), MediaType.valueOf(req.getMediaType())));
+                predicates.add(cb.equal(root.get(PredicateFieldName.MEDIA_TYPE.getName()), MediaType.valueOf(req.getMediaType())));
             }
             if (SecurityUtils.getCurrentUserId() != null){
-                predicates.add(cb.equal(root.get("userId"), SecurityUtils.getCurrentUserId()));
+                predicates.add(cb.equal(root.get(PredicateFieldName.USER_ID.getName()), SecurityUtils.getCurrentUserId()));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };

@@ -1,6 +1,9 @@
 package com.jimmy.service.impl;
 
 import com.jimmy.common.PaginatedApiResult;
+import com.jimmy.constant.DeleteFlag;
+import com.jimmy.constant.PredicateFieldName;
+import com.jimmy.constant.StatusFlag;
 import com.jimmy.entity.Menu;
 import com.jimmy.entity.Role;
 import com.jimmy.entity.RoleMenu;
@@ -43,7 +46,7 @@ public class RoleServiceImpl implements RoleService {
     public PaginatedApiResult<RoleResp> list(Integer page, Integer pageSize) {
 
         Pageable pageable = PageRequest.of(page - 1, pageSize,
-                Sort.by(Sort.Direction.ASC, "id"));
+                Sort.by(Sort.Direction.ASC, PredicateFieldName.ID.getName()));
         RoleReq req = new RoleReq();
         Specification<Role> roleSpecification = buildSpecification(req);
         Page<Role> rolePage = roleRepository.findAll(roleSpecification, pageable);
@@ -133,7 +136,7 @@ public class RoleServiceImpl implements RoleService {
 
         role.setRoleName(save.getRoleName());
         role.setDescription(save.getDescription());
-        role.setStatus(save.getStatus());
+        role.setStatus(Integer.valueOf(save.getStatus()));
         role.setUpdateAt(now);
 
         role = roleRepository.save(role);
@@ -162,13 +165,11 @@ public class RoleServiceImpl implements RoleService {
         return (root, query, cb) -> {
             // 存储查询条件的集合
             List<Predicate> predicates = new ArrayList<>();
-            predicates.add(cb.equal(root.get("deleteFlag"),0));
+            predicates.add(cb.equal(root.get(PredicateFieldName.DELETE_FLAG.getName()), DeleteFlag.NORMAL.getFlag()));
             if (req.getId() != null){
-                predicates.add(cb.equal(root.get("id"), req.getId()));
+                predicates.add(cb.equal(root.get(PredicateFieldName.ID.getName()), req.getId()));
             }
-//            if (UserUtils.getUserId() != null){
-//                predicates.add(cb.equal(root.get("userId"), UserUtils.getUserId()));
-//            }
+            predicates.add(cb.equal(root.get(PredicateFieldName.STATUS.getName()), StatusFlag.VALID.getFlag()));
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 

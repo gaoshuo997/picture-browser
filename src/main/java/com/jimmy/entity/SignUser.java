@@ -1,5 +1,7 @@
 package com.jimmy.entity;
 
+import com.jimmy.constant.DeleteFlag;
+import com.jimmy.constant.StatusFlag;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -25,17 +27,17 @@ public class SignUser {
     private String phone;
 
     @Column(name = "create_time")
-    private LocalDateTime createTime;
+    private LocalDateTime createdAt;
 
     @Column(name = "update_time")
-    private LocalDateTime updateTime;
+    private LocalDateTime updatedAt;
 
     @Column(name = "delete_flag")
-    private Integer deleteFlag = 0;
+    private Integer deleteFlag = DeleteFlag.NORMAL.getFlag();
 
     @Column(name = "token_version")
     private Integer tokenVersion = 0;
 
     @Column(name = "status")
-    private String status = "ENABLE";
+    private Integer status = StatusFlag.VALID.getFlag();
 }

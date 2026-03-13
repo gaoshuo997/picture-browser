@@ -3,6 +3,8 @@ package com.jimmy.service.impl;
 import com.jimmy.common.PaginatedApiResult;
 import com.jimmy.common.exception.BadReqExceptionMsg;
 import com.jimmy.common.result.BusinessException;
+import com.jimmy.constant.DeleteFlag;
+import com.jimmy.constant.PredicateFieldName;
 import com.jimmy.entity.Role;
 import com.jimmy.entity.SignUser;
 import com.jimmy.entity.UserRole;
@@ -58,13 +60,13 @@ public class SignUserServiceImpl implements SignUserService {
                     BadReqExceptionMsg.SIGN_NUM_OVER.getMessage());
         }
         Long countByLoginName = signUserRepository
-                .countSignUsersByLoginNameIgnoreCaseAndDeleteFlag(save.getLoginName().trim(),0);
+                .countSignUsersByLoginNameIgnoreCaseAndDeleteFlag(save.getLoginName().trim(),DeleteFlag.NORMAL.getFlag());
         if (countByLoginName !=0 ){
             throw  new BusinessException(BadReqExceptionMsg.SIGN_ALREADY_EXIST.getCode(),
                     BadReqExceptionMsg.SIGN_ALREADY_EXIST.getMessage());
         }
         Long countByEmail = signUserRepository
-                .countSignUsersByEmailIgnoreCaseAndDeleteFlag(save.getEmail().trim(),0);
+                .countSignUsersByEmailIgnoreCaseAndDeleteFlag(save.getEmail().trim(),DeleteFlag.NORMAL.getFlag());
         if (countByEmail != 0){
             throw  new BusinessException(BadReqExceptionMsg.SiGN_EMAIL_EXIST.getCode(),
                     BadReqExceptionMsg.SiGN_EMAIL_EXIST.getMessage());
@@ -72,22 +74,22 @@ public class SignUserServiceImpl implements SignUserService {
         save.setPassword(passwordEncoder.encode(save.getPassword()));
         SignUser signUser = signUserMapper.saveToEntity(save);
         LocalDateTime now = LocalDateTime.now();
-        signUser.setCreateTime(now);
-        signUser.setUpdateTime(now);
+        signUser.setCreatedAt(now);
+        signUser.setUpdatedAt(now);
         return signUserRepository.save(signUser);
     }
 
     @Override
     public SignUser findSignUserById(Long id) {
         if (id != null){
-            return signUserRepository.findSignUsersByIdAndDeleteFlag(id,0);
+            return signUserRepository.findSignUsersByIdAndDeleteFlag(id,DeleteFlag.NORMAL.getFlag());
         }
         return null;
     }
 
     @Override
     public SignUser checkSignUser(String loginUserName, String password) {
-        SignUser signUser = signUserRepository.findSignUserByLoginNameIgnoreCaseAndDeleteFlag(loginUserName, 0);
+        SignUser signUser = signUserRepository.findSignUserByLoginNameIgnoreCaseAndDeleteFlag(loginUserName, DeleteFlag.NORMAL.getFlag());
         if (signUser == null){
             throw new BusinessException(BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getCode(),
                     BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getMessage());
@@ -112,15 +114,15 @@ public class SignUserServiceImpl implements SignUserService {
         // 构建查询条件
         Specification<SignUser> signUserSpecification = buildSpecification(loginName, startDate, endDate);
         Pageable pageable = PageRequest.of(page - 1, size,
-                Sort.by(Sort.Direction.DESC, "createTime"));
+                Sort.by(Sort.Direction.DESC, PredicateFieldName.CREATED_AT.getName()));
 
         Page<SignUser> pageList = signUserRepository.findAll(signUserSpecification,pageable);
         List<SignUserResp> respList = new ArrayList<>(pageList.getSize());
 
         for (SignUser signUser : pageList.getContent()) {
             SignUserResp resp = new SignUserResp();
-            resp.setCreateTime(DateUtils.format(signUser.getCreateTime(), DateUtils.DATETIME_FORMAT));
-            resp.setUpdateTime(DateUtils.format(signUser.getUpdateTime(), DateUtils.DATETIME_FORMAT));
+            resp.setCreatedAt(DateUtils.format(signUser.getCreatedAt(), DateUtils.DATETIME_FORMAT));
+            resp.setUpdatedAt(DateUtils.format(signUser.getUpdatedAt(), DateUtils.DATETIME_FORMAT));
             BeanUtils.copyProperties(signUser, resp);
             respList.add(resp);
         }
@@ -132,7 +134,7 @@ public class SignUserServiceImpl implements SignUserService {
     @Override
     public void deleteById(Long id) {
         SignUser signUser = checkUserIsExist(id);
-        signUser.setDeleteFlag(1);
+        signUser.setDeleteFlag(DeleteFlag.DELETE.getFlag());
         signUserRepository.save(signUser);
         userRoleRepository.deleteUserRoleByUserId(id);
     }
@@ -230,13 +232,13 @@ public class SignUserServiceImpl implements SignUserService {
                 safeName = safeName.replace("\\", "\\\\")
                         .replace("%", "\\%")
                         .replace("_", "\\_");
-                predicates.add(cb.like(root.get("loginName"), cb.literal(safeName + "%")));
+                predicates.add(cb.like(root.get(PredicateFieldName.LOGIN_NAME.getName()), cb.literal(safeName + "%")));
             }
             if (startDate != null){
-                predicates.add(cb.greaterThanOrEqualTo(root.get("createTime"),startDate));
+                predicates.add(cb.greaterThanOrEqualTo(root.get(PredicateFieldName.CREATED_AT.getName()),startDate));
             }
             if (endDate != null){
-                predicates.add(cb.lessThanOrEqualTo(root.get("createTime"), endDate));
+                predicates.add(cb.lessThanOrEqualTo(root.get(PredicateFieldName.CREATED_AT.getName()), endDate));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };

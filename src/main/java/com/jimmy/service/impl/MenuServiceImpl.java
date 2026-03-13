@@ -1,5 +1,6 @@
 package com.jimmy.service.impl;
 
+import com.jimmy.constant.DeleteFlag;
 import com.jimmy.entity.Menu;
 import com.jimmy.entity.Role;
 import com.jimmy.entity.RoleMenu;
@@ -73,10 +74,7 @@ public class MenuServiceImpl implements MenuService {
                 .toList();
 
         // 5. 查询菜单详情
-        List<Menu> menus = menuRepository.findByIdInAndDeleteFlag(menuIds,0);
-        menus = menus.stream()
-                .filter(m -> m.getDeleteFlag() == null || m.getDeleteFlag() == 0)
-                .toList();
+        List<Menu> menus = menuRepository.findByIdInAndDeleteFlag(menuIds,DeleteFlag.NORMAL.getFlag());
 
         // 6. 构建菜单树
         List<MenuResp> respList = buildMenuTree(menus);
@@ -117,10 +115,6 @@ public class MenuServiceImpl implements MenuService {
     private MenuResp convertToMenuResp(Menu menu) {
         MenuResp resp = new MenuResp();
         BeanUtils.copyProperties(menu,resp);
-//        resp.setId(String.valueOf(menu.getId()));
-//        resp.setName(menu.getName());
-//        resp.setIcon(menu.getIcon());
-//        resp.setPath(menu.getPath());
         resp.setChildren(null);
         return resp;
     }
@@ -132,7 +126,7 @@ public class MenuServiceImpl implements MenuService {
         BeanUtils.copyProperties(menuSave, menu);
         menu.setCreateAt(now);
         menu.setUpdateAt(now);
-        menu.setDeleteFlag(0);
+        menu.setDeleteFlag(DeleteFlag.NORMAL.getFlag());
 
         if (menuSave.getParentId() != null) {
             menuRepository.findById(menuSave.getParentId())
@@ -150,7 +144,7 @@ public class MenuServiceImpl implements MenuService {
         menu.setId(id);
         BeanUtils.copyProperties(menuSave, menu);
         menu.setUpdateAt(now);
-        menu.setDeleteFlag(0);
+        menu.setDeleteFlag(DeleteFlag.NORMAL.getFlag());
 
         if (menuSave.getParentId() != null) {
             menuRepository.findById(menuSave.getParentId())
@@ -163,7 +157,7 @@ public class MenuServiceImpl implements MenuService {
     @Override
     public void deleteMenuById(Long id) {
         Menu menu = menuRepository.findById(id).orElseThrow(() -> new RuntimeException("菜单不存在"));
-        menu.setDeleteFlag(1);
+        menu.setDeleteFlag(DeleteFlag.DELETE.getFlag());
         menuRepository.save(menu);
     }
 }

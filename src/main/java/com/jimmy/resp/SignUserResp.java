@@ -12,7 +12,7 @@ public class SignUserResp {
 
     private String phone;
 
-    private String createTime;
+    private String createdAt;
 
-    private String updateTime;
+    private String updatedAt;
 }

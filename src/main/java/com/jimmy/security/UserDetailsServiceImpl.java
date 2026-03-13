@@ -1,5 +1,6 @@
 package com.jimmy.security;
 
+import com.jimmy.constant.StatusFlag;
 import com.jimmy.entity.SignUser;
 import com.jimmy.resp.RoleResp;
 import com.jimmy.service.SignUserService;
@@ -53,9 +54,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             throw new UsernameNotFoundException("用户不存在: " + userId);
         }
 
-        // 检查用户状态 (假设 status 为 "DISABLE" 表示禁用，deleteFlag为1表示已删除)
+        // 检查用户状态 (假设 status 为 0 表示禁用，deleteFlag为1表示已删除)
         if (user.getStatus() != null &&
-            ("DISABLE".equals(user.getStatus()) || user.getDeleteFlag().equals(1))) {
+            (StatusFlag.VALID.getFlag().equals(user.getStatus()) || user.getDeleteFlag().equals(1))) {
             log.warn("用户已被禁用 - userId: {}", userId);
             throw new UsernameNotFoundException("用户已被禁用");
         }

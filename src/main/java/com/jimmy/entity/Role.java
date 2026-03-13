@@ -1,5 +1,7 @@
 package com.jimmy.entity;
 
+import com.jimmy.constant.DeleteFlag;
+import com.jimmy.constant.StatusFlag;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -28,9 +30,9 @@ public class Role {
     private LocalDateTime updateAt;
 
     @Column(name = "delete_flag")
-    private Integer deleteFlag = 0;
+    private Integer deleteFlag = DeleteFlag.NORMAL.getFlag();
 
     @Column(name = "status")
-    private Integer status = 1;
+    private Integer status = StatusFlag.VALID.getFlag();
 
 }

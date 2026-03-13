@@ -1,5 +1,6 @@
 package com.jimmy.service.impl;
 
+import com.jimmy.constant.PredicateFieldName;
 import com.jimmy.entity.*;
 import com.jimmy.repository.*;
 import com.jimmy.req.LearningProgressReq;
@@ -53,7 +54,7 @@ public class LearningServiceImpl implements LearningService {
                 statementIndex,0,0);
 
         Specification<Statements> statementsSpecification = buildSpecification(record);
-        Sort sort = Sort.by(Sort.Direction.ASC, "order");
+        Sort sort = Sort.by(Sort.Direction.ASC, PredicateFieldName.ORDER.getName());
         List<Statements> lessOrder = statementsRepository.findAll(statementsSpecification, sort);
 
         LearningProgressResp resp = new LearningProgressResp();
@@ -159,10 +160,10 @@ public class LearningServiceImpl implements LearningService {
             // 存储查询条件的集合
             List<Predicate> predicates = new ArrayList<>();
             if (record.courseId() != null){
-                predicates.add(cb.equal(root.get("courseId"), record.courseId()));
+                predicates.add(cb.equal(root.get(PredicateFieldName.COURSE_ID.getName()), record.courseId()));
             }
             if (record.order() != null){
-                predicates.add(cb.lessThanOrEqualTo(root.get("order"), record.order()));
+                predicates.add(cb.lessThanOrEqualTo(root.get(PredicateFieldName.ORDER.getName()), record.order()));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };

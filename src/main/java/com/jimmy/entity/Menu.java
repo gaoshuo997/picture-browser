@@ -1,5 +1,6 @@
 package com.jimmy.entity;
 
+import com.jimmy.constant.DeleteFlag;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -35,5 +36,5 @@ public class Menu {
     private LocalDateTime updateAt;
 
     @Column(name = "delete_flag")
-    private Integer deleteFlag = 0;
+    private Integer deleteFlag = DeleteFlag.NORMAL.getFlag();
 }
