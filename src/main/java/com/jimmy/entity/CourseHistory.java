@@ -2,8 +2,7 @@ package com.jimmy.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -27,9 +26,9 @@ public class CourseHistory {
     private Integer completionCount;
 
     @Column(name = "created_at", nullable = false)
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 
 }

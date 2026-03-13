@@ -1,7 +1,7 @@
 package com.jimmy.mapperStruct;
 
 import com.jimmy.entity.SignUser;
-import com.jimmy.req.SignUserReq;
+import com.jimmy.req.SignUserSave;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -12,9 +12,9 @@ public interface SignUserMapper {
     @Mapping(source = "loginName", target = "loginName", qualifiedByName = "stringTrim")
     @Mapping(source = "password", target = "password", qualifiedByName = "stringTrim")
     @Mapping(source = "email", target = "email", qualifiedByName = "stringTrim")
-    SignUser reqToEntity(SignUserReq req);
+    SignUser saveToEntity(SignUserSave req);
 
-    SignUserReq entityToReq(SignUser signUser);
+    SignUserSave entityToSave(SignUser signUser);
 
     @Named("stringTrim")
     default String stringTrim(String source) {

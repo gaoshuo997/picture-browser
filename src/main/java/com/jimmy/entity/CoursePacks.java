@@ -2,8 +2,7 @@ package com.jimmy.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
-import java.util.Date;
+import java.time.LocalDateTime;
 
 // 课程包
 @Data
@@ -31,8 +30,8 @@ public class CoursePacks {
     private Long creatorId;
 
     @Column(name = "created_at")
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 }

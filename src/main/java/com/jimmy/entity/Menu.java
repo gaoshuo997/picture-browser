@@ -3,7 +3,7 @@ package com.jimmy.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Entity(name = "menu")
@@ -22,19 +22,18 @@ public class Menu {
     @Column(name = "path", length = 128)
     private String path;
 
-    @ManyToOne
-    @JoinColumn(name = "parent_id")
-    private Menu parentMenu;
+    @Column(name = "parent_id")
+    private Long parentId;
 
-    @Column(name = "sort_order")
-    private Integer sortOrder;
+    @Column(name = "sort_order", nullable = false)
+    private Integer order;
 
     @Column(name = "create_at")
-    private Date createAt;
+    private LocalDateTime createAt;
 
     @Column(name = "update_at")
-    private Date updateAt;
+    private LocalDateTime updateAt;
 
     @Column(name = "delete_flag")
-    private Integer deleteFlag;
+    private Integer deleteFlag = 0;
 }

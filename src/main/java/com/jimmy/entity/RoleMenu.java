@@ -2,8 +2,7 @@ package com.jimmy.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Entity(name = "role_menu")
@@ -13,14 +12,12 @@ public class RoleMenu {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "role_id", nullable = false)
-    private Role role;
+    @Column(name = "role_id", nullable = false)
+    private Long roleId;
 
-    @ManyToOne
-    @JoinColumn(name = "menu_id", nullable = false)
-    private Menu menu;
+    @Column(name = "menu_id", nullable = false)
+    private Long menuId;
 
     @Column(name = "create_at")
-    private Date createAt;
+    private LocalDateTime createAt;
 }

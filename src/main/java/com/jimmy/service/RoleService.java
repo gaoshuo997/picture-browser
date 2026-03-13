@@ -1,7 +1,6 @@
 package com.jimmy.service;
 
 import com.jimmy.common.PaginatedApiResult;
-import com.jimmy.entity.Role;
 import com.jimmy.req.RoleMenuSave;
 import com.jimmy.req.RoleSave;
 import com.jimmy.resp.RoleResp;
@@ -15,9 +14,11 @@ public interface RoleService {
 
     void assignMenus(RoleMenuSave save);
 
-    Role create(RoleSave save);
+    RoleResp create(RoleSave save);
 
     void deleteById(Long id);
 
     RoleResp update(Long id, RoleSave save);
+
+    RoleResp detail(Long id);
 }

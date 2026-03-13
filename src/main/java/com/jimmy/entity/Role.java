@@ -1,10 +1,8 @@
 package com.jimmy.entity;
 
-import com.jimmy.entity.enums.RoleCode;
 import jakarta.persistence.*;
 import lombok.Data;
-
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Entity(name = "role")
@@ -24,13 +22,13 @@ public class Role {
     private String  description;
 
     @Column(name = "create_at")
-    private Date createAt;
+    private LocalDateTime createAt;
 
     @Column(name = "update_at")
-    private Date updateAt;
+    private LocalDateTime updateAt;
 
     @Column(name = "delete_flag")
-    private Integer deleteFlag;
+    private Integer deleteFlag = 0;
 
     @Column(name = "status")
     private Integer status = 1;

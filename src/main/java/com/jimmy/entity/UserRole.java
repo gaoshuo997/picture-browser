@@ -2,8 +2,7 @@ package com.jimmy.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Entity(name = "user_role")
@@ -13,14 +12,12 @@ public class UserRole {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private SignUser user;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
-    @ManyToOne
-    @JoinColumn(name = "role_id", nullable = false)
-    private Role role;
+    @Column(name = "role_id", nullable = false)
+    private Long roleId;
 
     @Column(name = "create_at")
-    private Date createAt;
+    private LocalDateTime createAt;
 }

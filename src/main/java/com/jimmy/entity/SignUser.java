@@ -2,8 +2,7 @@ package com.jimmy.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -26,11 +25,17 @@ public class SignUser {
     private String phone;
 
     @Column(name = "create_time")
-    private Date createTime;
+    private LocalDateTime createTime;
 
     @Column(name = "update_time")
-    private Date updateTime;
+    private LocalDateTime updateTime;
 
     @Column(name = "delete_flag")
     private Integer deleteFlag = 0;
+
+    @Column(name = "token_version")
+    private Integer tokenVersion = 0;
+
+    @Column(name = "status")
+    private String status = "ENABLE";
 }

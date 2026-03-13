@@ -29,7 +29,13 @@ public enum BadReqExceptionMsg {
 
     MEDIA_IS_NOT_EXIST(40011,"这个媒体文件不存在"),
 
-    PRE_SIGNED_ERROR(40012,"生成媒体预签名失败");
+    PRE_SIGNED_ERROR(40012,"生成媒体预签名失败"),
+
+    INVALID_DATE_RANGE(40013,"结束日期不能早于开始日期"),
+
+    INVALID_DATE_FORMAT(40014,"日期格式不正确，应为yyyy-MM-dd"),
+
+    INVALID_TIME_RANGE_IS_NULL(40015, "时间范围参数为空");
 
     private final int code;
     private final String message;

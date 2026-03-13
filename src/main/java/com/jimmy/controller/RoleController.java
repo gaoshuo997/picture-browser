@@ -7,7 +7,6 @@ import com.jimmy.req.RoleSave;
 import com.jimmy.resp.RoleResp;
 import com.jimmy.service.RoleService;
 import jakarta.validation.Valid;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.constraints.NotNull;
@@ -44,15 +43,13 @@ public class RoleController {
     @PostMapping("/create")
     public Result<RoleResp> add(
             @Valid @RequestBody RoleSave save){
-        RoleResp resp = new RoleResp();
-        BeanUtils.copyProperties(roleService.create(save), resp);
-        return Result.success(resp);
+        return Result.success(roleService.create(save));
     }
 
     /**
      * 更新角色
      */
-    @PutMapping("/{id}")
+    @PutMapping("/update/{id}")
     public Result<RoleResp> update(
             @PathVariable @NotNull(message = "角色ID不能为空") Long id,
             @Valid @RequestBody RoleSave save){
@@ -77,5 +74,13 @@ public class RoleController {
     public Result<?> assignMenus(@Valid @RequestBody RoleMenuSave save){
         roleService.assignMenus(save);
         return Result.success();
+    }
+
+    /**
+     * 获取角色详细信息
+     */
+    @GetMapping("/{id}")
+    public Result<RoleResp> get(@PathVariable @NotNull(message = "角色ID不能为空") Long id){
+        return Result.success(roleService.detail(id));
     }
 }

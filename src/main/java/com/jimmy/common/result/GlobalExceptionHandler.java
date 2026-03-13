@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -185,10 +186,9 @@ public class GlobalExceptionHandler {
     /**
      * 处理 404 异常
      */
-    @ExceptionHandler(NoHandlerFoundException.class)
+    @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Result<?> handleNoHandlerFoundException(
-            NoHandlerFoundException e, HttpServletRequest request) {
+    public Result<?> handleNotFoundException(Exception e, HttpServletRequest request) {
         log.warn("资源不存在: {} - URI: {}", e.getMessage(), request.getRequestURI());
         return Result.failed(ResultCode.NOT_FOUND, "请求的资源不存在");
     }

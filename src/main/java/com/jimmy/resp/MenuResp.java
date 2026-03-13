@@ -6,9 +6,11 @@ import java.util.List;
 
 @Data
 public class MenuResp {
-    private String id;
+    private Long id;
     private String name;
     private String icon;
     private String path;
     private List<MenuResp> children;
+    private Integer order;
+    private Long parentId;
 }

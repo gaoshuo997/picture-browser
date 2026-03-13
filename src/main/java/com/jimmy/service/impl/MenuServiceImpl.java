@@ -1,21 +1,28 @@
 package com.jimmy.service.impl;
 
 import com.jimmy.entity.Menu;
+import com.jimmy.entity.Role;
 import com.jimmy.entity.RoleMenu;
 import com.jimmy.entity.UserRole;
 import com.jimmy.entity.enums.RoleCode;
+import com.jimmy.repository.RoleRepository;
+import com.jimmy.req.MenuSave;
 import com.jimmy.repository.MenuRepository;
 import com.jimmy.repository.RoleMenuRepository;
 import com.jimmy.repository.UserRoleRepository;
 import com.jimmy.resp.MenuResp;
 import com.jimmy.service.MenuService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class MenuServiceImpl implements MenuService {
 
     @Autowired
@@ -26,6 +33,8 @@ public class MenuServiceImpl implements MenuService {
 
     @Autowired
     private RoleMenuRepository roleMenuRepository;
+    @Autowired
+    private RoleRepository roleRepository;
 
     @Override
     public List<MenuResp> getMenuListByUserId(Long userId) {
@@ -35,16 +44,20 @@ public class MenuServiceImpl implements MenuService {
             return new ArrayList<>();
         }
 
-        Optional<UserRole> any = userRoles.stream()
-                .filter(userRole -> userRole.getRole().getRoleCode().equals(RoleCode.ADMIN.toString())).findAny();
-
+        // 根据用户拥有的角色查询角色信息
+        List<Role> rolesByUser = roleRepository.findAllById(userRoles.stream().map(UserRole::getRoleId).toList());
+        // 查看用户是否拥有超级管理员权限
+        Optional<Role> any = rolesByUser.stream()
+                .filter(role -> role.getRoleCode().equals(RoleCode.ADMIN.toString())).findAny();
         // 如果是超级管理员则获取所有菜单
         if (any.isPresent()){
-            return buildMenuTree(menuRepository.findAll());
+            List<MenuResp> menuRespList = buildMenuTree(menuRepository.findAllByDeleteFlag(0));
+            menuRespList.sort(Comparator.comparingInt(MenuResp::getOrder));
+            return menuRespList;
         }
         // 2. 获取角色ID列表
         List<Long> roleIds = userRoles.stream()
-                .map(ur -> ur.getRole().getId())
+                .map(UserRole::getRoleId)
                 .toList();
 
         // 3. 查询角色对应的菜单关联
@@ -55,29 +68,26 @@ public class MenuServiceImpl implements MenuService {
 
         // 4. 获取菜单ID列表
         List<Long> menuIds = roleMenus.stream()
-                .map(rm -> rm.getMenu().getId())
+                .map(RoleMenu::getMenuId)
                 .distinct()
                 .toList();
 
         // 5. 查询菜单详情
-        List<Menu> menus = menuRepository.findByIdIn(menuIds);
+        List<Menu> menus = menuRepository.findByIdInAndDeleteFlag(menuIds,0);
         menus = menus.stream()
                 .filter(m -> m.getDeleteFlag() == null || m.getDeleteFlag() == 0)
-                .sorted((a, b) -> {
-                    Integer sortA = a.getSortOrder() != null ? a.getSortOrder() : 0;
-                    Integer sortB = b.getSortOrder() != null ? b.getSortOrder() : 0;
-                    return sortA.compareTo(sortB);
-                })
                 .toList();
 
         // 6. 构建菜单树
-        return buildMenuTree(menus);
+        List<MenuResp> respList = buildMenuTree(menus);
+        respList.sort(Comparator.comparingInt(MenuResp::getOrder));
+        return respList;
     }
 
     private List<MenuResp> buildMenuTree(List<Menu> menus) {
         List<MenuResp> result = new ArrayList<>();
         Map<Long, Menu> menuMap = menus.stream().collect(Collectors.toMap(Menu::getId, m -> m));
-        List<Menu> rootMenus = menus.stream().filter(m -> m.getParentMenu() == null).toList();
+        List<Menu> rootMenus = menus.stream().filter(m -> m.getParentId() == null).toList();
 
         for (Menu rootMenu : rootMenus) {
             MenuResp menuResp = convertToMenuResp(rootMenu);
@@ -91,13 +101,14 @@ public class MenuServiceImpl implements MenuService {
     private void buildChildren(MenuResp parentResp, Menu parentMenu, Map<Long, Menu> menuMap) {
         List<MenuResp> children = new ArrayList<>();
         for (Menu menu : menuMap.values()) {
-            if (menu.getParentMenu() != null && menu.getParentMenu().getId().equals(parentMenu.getId())) {
+            if (menu.getParentId() != null && menu.getParentId().equals(parentMenu.getId())) {
                 MenuResp childResp = convertToMenuResp(menu);
                 buildChildren(childResp, menu, menuMap);
                 children.add(childResp);
+                childResp.setParentId(parentMenu.getId());
             }
         }
-        children.sort((a, b) -> Long.compare(Long.parseLong(a.getId()), Long.parseLong(b.getId())));
+        children.sort(Comparator.comparingInt(MenuResp::getOrder));
         if (!children.isEmpty()) {
             parentResp.setChildren(children);
         }
@@ -105,11 +116,54 @@ public class MenuServiceImpl implements MenuService {
 
     private MenuResp convertToMenuResp(Menu menu) {
         MenuResp resp = new MenuResp();
-        resp.setId(String.valueOf(menu.getId()));
-        resp.setName(menu.getName());
-        resp.setIcon(menu.getIcon());
-        resp.setPath(menu.getPath());
+        BeanUtils.copyProperties(menu,resp);
+//        resp.setId(String.valueOf(menu.getId()));
+//        resp.setName(menu.getName());
+//        resp.setIcon(menu.getIcon());
+//        resp.setPath(menu.getPath());
         resp.setChildren(null);
         return resp;
+    }
+
+    @Override
+    public void saveMenu(MenuSave menuSave) {
+        Menu menu = new Menu();
+        LocalDateTime now = LocalDateTime.now();
+        BeanUtils.copyProperties(menuSave, menu);
+        menu.setCreateAt(now);
+        menu.setUpdateAt(now);
+        menu.setDeleteFlag(0);
+
+        if (menuSave.getParentId() != null) {
+            menuRepository.findById(menuSave.getParentId())
+                    .orElseThrow(() -> new RuntimeException("父菜单不存在"));
+            menu.setParentId(menuSave.getParentId());
+        }
+
+        menuRepository.save(menu);
+    }
+
+    @Override
+    public void updateMenu(Long id, MenuSave menuSave) {
+        Menu menu = new Menu();
+        LocalDateTime now = LocalDateTime.now();
+        menu.setId(id);
+        BeanUtils.copyProperties(menuSave, menu);
+        menu.setUpdateAt(now);
+        menu.setDeleteFlag(0);
+
+        if (menuSave.getParentId() != null) {
+            menuRepository.findById(menuSave.getParentId())
+                    .orElseThrow(() -> new RuntimeException("父菜单不存在"));
+            menu.setParentId(menuSave.getParentId());
+        }
+        menuRepository.save(menu);
+    }
+
+    @Override
+    public void deleteMenuById(Long id) {
+        Menu menu = menuRepository.findById(id).orElseThrow(() -> new RuntimeException("菜单不存在"));
+        menu.setDeleteFlag(1);
+        menuRepository.save(menu);
     }
 }

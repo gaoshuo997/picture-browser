@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import lombok.extern.slf4j.Slf4j;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -46,7 +47,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
 
     @Override
     public MediaResp uploadImage(MultipartFile multipartFile) {
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
         UploadResultRecord resultRecord = minioUtil.uploadImage(multipartFile, BucketName.MO_JING.getMsg());
         String originalFilename = multipartFile.getOriginalFilename();
         try{
@@ -93,14 +94,9 @@ public class MediaUploadServiceImpl implements MediaUploadService {
             resp.setCreateAt(DateUtils.format(media.getCreatedAt(),DateUtils.DATETIME_FORMAT));
             resultList.add(resp);
         }
-        PaginatedApiResult<MediaResp> result = new PaginatedApiResult<>();
-        result.setPage(pageable.getPageNumber());
-        result.setPageSize(pageable.getPageSize());
-        result.setList(resultList);
-        result.setTotal(pageList.getTotalElements());
-        result.setCount(resultList.size());
-        result.setTotalPages(pageList.getTotalPages());
-        return result;
+        return new PaginatedApiResult<>(pageable.getPageNumber(),pageable.getPageSize(),
+                resultList.size(),pageList.getTotalElements(),
+                resultList,pageList.getTotalPages());
     }
 
     @Override
@@ -115,7 +111,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
 
     @Override
     public Media saveMediaRecord(@NotNull MediaReq mediaReq) {
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
         Media media = new Media();
         media.setUserId(mediaReq.getUserId());
         media.setCreatedAt(now);
@@ -144,7 +140,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
     public Media updateMediaRecord(@NotNull MediaReq mediaReq) {
         Media media = checkMediaExistOrNot(mediaReq.getId());
         media.setThumbnail(mediaReq.getThumbnail());
-        media.setUpdatedAt(new Date());
+        media.setUpdatedAt(LocalDateTime.now());
         return mediaRepository.save(media);
     }
 

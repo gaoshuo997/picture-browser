@@ -4,7 +4,7 @@ import com.jimmy.common.result.Result;
 import com.jimmy.entity.SignUser;
 import com.jimmy.jwt.JwtTokenProvider;
 import com.jimmy.req.LoginUserReq;
-import com.jimmy.req.SignUserReq;
+import com.jimmy.req.SignUserSave;
 import com.jimmy.service.SignUserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,8 +26,8 @@ public class LoginController {
 
     @ResponseBody
     @PostMapping(value = "/register")
-    public Result<Map<String,Object>> signUp(@Valid @RequestBody SignUserReq req) {
-        SignUser saved = signUserService.insertSignUser(req);
+    public Result<Map<String,Object>> signUp(@Valid @RequestBody SignUserSave save) {
+        SignUser saved = signUserService.insertSignUser(save);
         if (saved != null){
             Map<String, Object> resultMap = new HashMap<>(4);
             Map<String, Object> extraClaims = new HashMap<>(2);
@@ -62,29 +62,6 @@ public class LoginController {
             resultMap.put("user", signUser);
         }
         return Result.success(resultMap);
-    }
-
-    // token
-    @ResponseBody
-    @PostMapping(value = "/auth-token")
-    public Result<Map<String, Object>> auth(HttpServletRequest request) {
-        String token = jwtTokenProvider.resolveToken(request);
-        Map<String, Object> content = new HashMap<>();
-        content.put("result", false);
-        content.put("message", "登录认证失败");
-        if (token != null && jwtTokenProvider.validateToken(token)) {
-            Long userId = jwtTokenProvider.getUserId(token);
-            SignUser signUser = signUserService.findSignUserById(userId);
-            String checksum = jwtTokenProvider.getChecksum(token);
-            if (checksum != null
-                    && signUser != null) {
-                content.put("result", true);
-                content.put("userId", userId);
-                content.put("loginName", signUser.getLoginName());
-                content.put("message", "登录认证成功");
-            }
-        }
-        return Result.success(content);
     }
 
     @PostMapping("/logout")

@@ -14,10 +14,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -98,7 +97,7 @@ public class LearningServiceImpl implements LearningService {
         CourseHistory courseHistory = courseHistoryRepository
                 .findFirstByCourseIdAndUserIdAndCoursePackId(record.courseId(),
                         UserUtils.getUserId(), record.coursePackId());
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
         if (courseHistory == null){
             courseHistory = new CourseHistory();
             courseHistory.setCourseId(record.courseId());
@@ -122,8 +121,8 @@ public class LearningServiceImpl implements LearningService {
         UserCourseProgress userProgress = userCourseProgressRepository
                 .findFirstByCoursePackIdAndUserIdAndCourseId(record.coursePackId(),
                         record.userId(), record.courseId());
-        Date now = new Date();
 
+        LocalDateTime now = LocalDateTime.now();
         if (userProgress == null){
             userProgress = new UserCourseProgress();
             userProgress.setUserId(record.userId());

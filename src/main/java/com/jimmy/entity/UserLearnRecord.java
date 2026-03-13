@@ -2,9 +2,8 @@ package com.jimmy.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
 import java.time.LocalDate;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "user_learn_record")
@@ -22,10 +21,10 @@ public class UserLearnRecord {
     private Integer count;
 
     @Column(name = "created_at", nullable = false)
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 
     @Column(name = "day", nullable = false)
     private LocalDate day;

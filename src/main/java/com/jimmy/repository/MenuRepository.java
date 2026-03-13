@@ -9,5 +9,7 @@ import java.util.List;
 @Repository
 public interface MenuRepository extends JpaRepository<Menu, Long> {
 
-    List<Menu> findByIdIn(List<Long> ids);
+    List<Menu> findByIdInAndDeleteFlag(List<Long> ids, Integer deleteFlag);
+
+    List<Menu> findAllByDeleteFlag(Integer deleteFlag);
 }

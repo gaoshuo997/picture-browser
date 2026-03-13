@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class RoleSave {
 
@@ -22,6 +24,5 @@ public class RoleSave {
     @NotNull(message = "状态不能为空" )
     private Integer status;
 
-    @NotNull(message = "排序不能为空")
-    private Integer sort;
+    private List<Long> menuIds;
 }

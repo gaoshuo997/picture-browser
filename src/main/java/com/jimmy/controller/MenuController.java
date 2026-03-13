@@ -1,14 +1,15 @@
 package com.jimmy.controller;
 
 import com.jimmy.common.result.Result;
+import com.jimmy.req.MenuSave;
 import com.jimmy.resp.MenuResp;
 import com.jimmy.service.MenuService;
 import com.jimmy.utils.UserUtils;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @RestController
@@ -23,5 +24,25 @@ public class MenuController {
         Long userId = UserUtils.getUserId();
         List<MenuResp> menuList = menuService.getMenuListByUserId(userId);
         return Result.success(menuList);
+    }
+
+    @PostMapping("/create")
+    public Result<Void> saveMenu(@Valid @RequestBody MenuSave menuSave) {
+        menuService.saveMenu(menuSave);
+        return Result.success();
+    }
+
+    @PutMapping("/update/{id}")
+    public Result<Void> updateMenu(
+            @PathVariable @NotNull(message = "角色ID不能为空") Long id,
+            @Valid @RequestBody MenuSave menuSave){
+        menuService.updateMenu(id, menuSave);
+        return Result.success();
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public Result<Void> deleteMenu(@PathVariable @NotNull(message = "菜单ID不能为空") Long id){
+        menuService.deleteMenuById(id);
+        return Result.success();
     }
 }

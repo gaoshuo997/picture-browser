@@ -8,7 +8,6 @@ import com.jimmy.service.SignUserService;
 import com.jimmy.utils.JacksonUtils;
 import com.jimmy.utils.UserUtils;
 import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,8 +17,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import java.util.List;
-
 @Component
 @Slf4j
 public class LoginValidatorInterceptor implements HandlerInterceptor {
@@ -27,20 +24,18 @@ public class LoginValidatorInterceptor implements HandlerInterceptor {
     @Resource
     private JwtTokenProvider jwtTokenProvider;
     @Resource
-    private RedisTemplate<String,Object> redisTemplate;
-    @Resource
     private SignUserService signUserService;
 
     @Override
-    public void afterCompletion(HttpServletRequest arg0,
-                                HttpServletResponse arg1, Object arg2, Exception arg3){
+    public void afterCompletion(@Nonnull HttpServletRequest arg0,
+                                @Nonnull HttpServletResponse arg1, @Nonnull Object arg2, Exception arg3){
         UserUtils.remove();
     }
 
 
     @Override
     public boolean preHandle(@Nonnull HttpServletRequest request,
-                             @Nonnull HttpServletResponse response, @Nullable Object arg2) throws Exception {
+                             @Nonnull HttpServletResponse response, @Nonnull Object arg2) throws Exception {
         String token = jwtTokenProvider.resolveToken(request);
         String requestURI = request.getRequestURI();
         String contextPath = request.getContextPath();

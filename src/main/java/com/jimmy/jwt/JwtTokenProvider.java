@@ -1,20 +1,16 @@
 package com.jimmy.jwt;
 
-import com.jimmy.common.JwtCommonKeys;
 import com.jimmy.config.JwtConfig;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.Resource;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import javax.crypto.SecretKey;
 
@@ -22,9 +18,6 @@ import javax.crypto.SecretKey;
 public class JwtTokenProvider {
 
   private SecretKey signingKey;
-
-  @Value("${jwt.expire-in:3600000}")
-  private long validityInMilliseconds;
 
   @Resource
   JwtConfig jwtConfig;
@@ -114,10 +107,6 @@ public class JwtTokenProvider {
    */
   public boolean validateToken(String token) {
     try {
-//      Jwts.parser()
-//          .verifyWith(signingKey)
-//          .build()
-//          .parseSignedClaims(token);
       getClaimsFromToken(token);
       return true;
     } catch (JwtException | IllegalArgumentException e) {
@@ -125,7 +114,7 @@ public class JwtTokenProvider {
     }
   }
 
-  private Claims getClaimsFromToken(String token) {
+  public Claims getClaimsFromToken(String token) {
       return Jwts.parser()
             .verifyWith(signingKey)
             .build()
