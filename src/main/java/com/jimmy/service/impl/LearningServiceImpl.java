@@ -4,9 +4,9 @@ import com.jimmy.entity.*;
 import com.jimmy.repository.*;
 import com.jimmy.req.LearningProgressReq;
 import com.jimmy.resp.LearningProgressResp;
+import com.jimmy.security.SecurityUtils;
 import com.jimmy.service.LearningService;
 import com.jimmy.utils.DateUtils;
-import com.jimmy.utils.UserUtils;
 import jakarta.annotation.Resource;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.beans.BeanUtils;
@@ -38,11 +38,11 @@ public class LearningServiceImpl implements LearningService {
     @Override
     public LearningProgressResp getStart(Long courseId) {
         UserCourseProgress first = userCourseProgressRepository
-                .findFirstByCourseIdAndUserId(courseId, UserUtils.getUserId());
+                .findFirstByCourseIdAndUserId(courseId, SecurityUtils.getCurrentUserId());
 
         if(first == null){
             LearningProgressResp resp = new LearningProgressResp();
-            resp.setUserId(UserUtils.getUserId());
+            resp.setUserId(SecurityUtils.getCurrentUserId());
             resp.setCourseId(courseId);
             resp.setStatementIndex(0);
             resp.setCompletedStatement(List.of());
@@ -76,7 +76,7 @@ public class LearningServiceImpl implements LearningService {
             throw new RuntimeException("课程信息异常");
         }
         // 保存历史记录
-        LearningRecord record = new LearningRecord(UserUtils.getUserId(), statements.getCourseId(),
+        LearningRecord record = new LearningRecord(SecurityUtils.getCurrentUserId(), statements.getCourseId(),
                 coursesOptional.get().getCoursePackId(), statements.getOrder(),
                 req.getDuration(),req.getCount());
         saveCourseHistory(record);
@@ -96,12 +96,12 @@ public class LearningServiceImpl implements LearningService {
     private void saveCourseHistory(LearningRecord record){
         CourseHistory courseHistory = courseHistoryRepository
                 .findFirstByCourseIdAndUserIdAndCoursePackId(record.courseId(),
-                        UserUtils.getUserId(), record.coursePackId());
+                        SecurityUtils.getCurrentUserId(), record.coursePackId());
         LocalDateTime now = LocalDateTime.now();
         if (courseHistory == null){
             courseHistory = new CourseHistory();
             courseHistory.setCourseId(record.courseId());
-            courseHistory.setUserId(UserUtils.getUserId());
+            courseHistory.setUserId(SecurityUtils.getCurrentUserId());
             courseHistory.setCoursePackId(record.coursePackId());
             courseHistory.setCompletionCount(record.order());
             courseHistory.setCreatedAt(now);
@@ -138,10 +138,10 @@ public class LearningServiceImpl implements LearningService {
         userCourseProgressRepository.save(userProgress);
 
         UserLearnRecord userLearnRecord = userLearnRecordRepository.findByDayAndUserId(LocalDate.now(),
-                UserUtils.getUserId());
+                SecurityUtils.getCurrentUserId());
         if (userLearnRecord == null){
             userLearnRecord = new UserLearnRecord();
-            userLearnRecord.setUserId(UserUtils.getUserId());
+            userLearnRecord.setUserId(SecurityUtils.getCurrentUserId());
             userLearnRecord.setDay(LocalDate.now());
             userLearnRecord.setDuration(record.duration());
             userLearnRecord.setUpdatedAt(now);

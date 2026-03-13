@@ -22,13 +22,6 @@ public class JwtTokenProvider {
   @Resource
   JwtConfig jwtConfig;
 
-
-  private final String TOKEN_KEY = "Authorization";
-
-  private final String TOKEN_PREFIX = "Bearer ";
-
-  private final String CHECKSUM = "checksum";
-
   @PostConstruct
   protected void init() {
     signingKey = Keys.hmacShaKeyFor(jwtConfig.getSecretKey().getBytes(StandardCharsets.UTF_8));
@@ -74,26 +67,16 @@ public class JwtTokenProvider {
   }
 
   /**
-   * get checksum from token
-   *
-   * @return checksum
-   */
-  public String getChecksum(String token) {
-    Object checksum = getClaimsFromToken(token)
-        .get(CHECKSUM);
-    return checksum == null ? null : checksum.toString();
-  }
-
-
-  /**
    * get token string from http header map.
    *
    * @param req HttpServletRequest
    * @return token
    */
   public String resolveToken(HttpServletRequest req) {
-    String bearerToken = req.getHeader(TOKEN_KEY);
-    if (bearerToken != null && bearerToken.startsWith(TOKEN_PREFIX)) {
+      String TOKEN_KEY = "Authorization";
+      String bearerToken = req.getHeader(TOKEN_KEY);
+      String TOKEN_PREFIX = "Bearer ";
+      if (bearerToken != null && bearerToken.startsWith(TOKEN_PREFIX)) {
       return bearerToken.substring(7);
     }
     return null;
@@ -122,16 +105,6 @@ public class JwtTokenProvider {
             .getPayload();
   }
 
-//  private String doGenerateToken(Claims claims) {
-//    Date now = new Date();
-//    Date validity = new Date(now.getTime() + validityInMilliseconds);
-//    return Jwts.builder()
-//            .claims(claims)
-//            .issuedAt(now)
-//            .expiration(validity)
-//            .signWith(signingKey, Jwts.SIG.HS256).compact();
-//  }
-
   public String refreshToken(String token) {
     String refreshedToken;
     try {
@@ -144,17 +117,4 @@ public class JwtTokenProvider {
     return refreshedToken;
   }
 
-//  public static void main(String[] args) {
-//    JwtTokenProvider provider = new JwtTokenProvider();
-//    String s = Base64.getEncoder().encodeToString("cci-data".getBytes(Charset.forName("UTF-8")));
-//    provider.secretKey = s;
-//    provider.validityInMilliseconds = 36000000;
-//
-//    String token = provider.createToken(1L, 1L, "admin", Arrays
-//        .asList("/sys/app/update.do", "/score/list", "/event/list"), "abc");
-//    System.out.println(token);
-//    boolean b = provider.validateToken(token);
-//    System.out.println(b);
-//
-//  }
 }

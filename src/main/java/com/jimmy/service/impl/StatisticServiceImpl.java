@@ -3,8 +3,8 @@ package com.jimmy.service.impl;
 import com.jimmy.entity.UserLearnRecord;
 import com.jimmy.repository.UserLearnRecordRepository;
 import com.jimmy.resp.StudyDurationResp;
+import com.jimmy.security.SecurityUtils;
 import com.jimmy.service.StatisticService;
-import com.jimmy.utils.UserUtils;
 import jakarta.annotation.Resource;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
@@ -27,7 +27,7 @@ public class StatisticServiceImpl implements StatisticService {
 
     @Override
     public List<StudyDurationResp> getDuration() {
-        List<UserLearnRecord> allRecord = userLearnRecordRepository.findByUserId(UserUtils.getUserId());
+        List<UserLearnRecord> allRecord = userLearnRecordRepository.findByUserId(SecurityUtils.getCurrentUserId());
         Map<LocalDate, List<UserLearnRecord>> groupByDate = allRecord.stream()
                 .collect(Collectors.groupingBy(UserLearnRecord::getDay));
 
@@ -39,7 +39,7 @@ public class StatisticServiceImpl implements StatisticService {
     @Override
     public StudyDurationResp getDurationByDay() {
         UserLearnRecord record = userLearnRecordRepository
-                .findByDayAndUserId(LocalDate.now(), UserUtils.getUserId());
+                .findByDayAndUserId(LocalDate.now(), SecurityUtils.getCurrentUserId());
         StudyDurationResp resp = new StudyDurationResp();
         if (Objects.isNull(record)){
             resp.setDuration(0);
@@ -58,7 +58,7 @@ public class StatisticServiceImpl implements StatisticService {
         LocalDate startOfWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
 
         StudyDurationResp resp = new StudyDurationResp();
-        List<UserLearnRecord> betweenWeek = userLearnRecordRepository.findByUserIdAndDayBetween(UserUtils.getUserId(),
+        List<UserLearnRecord> betweenWeek = userLearnRecordRepository.findByUserIdAndDayBetween(SecurityUtils.getCurrentUserId(),
                 startOfWeek, today);
         if (Objects.isNull(betweenWeek) || betweenWeek.isEmpty()){
             resp.setDuration(0);
@@ -74,7 +74,7 @@ public class StatisticServiceImpl implements StatisticService {
         LocalDate today = LocalDate.now();
         // 本自然月的第一天
         LocalDate firstDayOfMonth = today.with(TemporalAdjusters.firstDayOfMonth());
-        List<UserLearnRecord> betweenMonth = userLearnRecordRepository.findByUserIdAndDayBetween(UserUtils.getUserId(),
+        List<UserLearnRecord> betweenMonth = userLearnRecordRepository.findByUserIdAndDayBetween(SecurityUtils.getCurrentUserId(),
                 firstDayOfMonth, today);
         StudyDurationResp resp = new StudyDurationResp();
         if (Objects.isNull(betweenMonth) || betweenMonth.isEmpty()){
@@ -95,7 +95,7 @@ public class StatisticServiceImpl implements StatisticService {
             StudyDurationResp resp = new StudyDurationResp();
             resp.setDuration(totalDuration);
             resp.setDate(date.format(DateTimeFormatter.ISO_DATE));
-            resp.setUserId(UserUtils.getUserId());
+            resp.setUserId(SecurityUtils.getCurrentUserId());
             respList.add(resp);
         });
         return respList;

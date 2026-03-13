@@ -202,6 +202,7 @@ public class SignUserServiceImpl implements SignUserService {
         }
     }
 
+
     /**
      * 检查角色是否存在
      */

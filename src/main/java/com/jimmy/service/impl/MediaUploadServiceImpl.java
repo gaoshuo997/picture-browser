@@ -11,10 +11,10 @@ import com.jimmy.entity.enums.RedisKeyName;
 import com.jimmy.repository.MediaRepository;
 import com.jimmy.req.MediaReq;
 import com.jimmy.resp.MediaResp;
+import com.jimmy.security.SecurityUtils;
 import com.jimmy.service.MediaUploadService;
 import com.jimmy.utils.DateUtils;
 import com.jimmy.utils.MinioUtil;
-import com.jimmy.utils.UserUtils;
 import jakarta.annotation.Resource;
 import jakarta.persistence.criteria.Predicate;
 import org.jetbrains.annotations.NotNull;
@@ -52,7 +52,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
         String originalFilename = multipartFile.getOriginalFilename();
         try{
             Media media = new Media();
-            media.setUserId(UserUtils.getUserId());
+            media.setUserId(SecurityUtils.getCurrentUserId());
             media.setCreatedAt(now);
             media.setUpdatedAt(now);
             media.setUrl(resultRecord.accessUrl());
@@ -188,8 +188,8 @@ public class MediaUploadServiceImpl implements MediaUploadService {
             if (req.getMediaType() != null && !req.getMediaType().isEmpty()){
                 predicates.add(cb.equal(root.get("mediaType"), MediaType.valueOf(req.getMediaType())));
             }
-            if (UserUtils.getUserId() != null){
-                predicates.add(cb.equal(root.get("userId"), UserUtils.getUserId()));
+            if (SecurityUtils.getCurrentUserId() != null){
+                predicates.add(cb.equal(root.get("userId"), SecurityUtils.getCurrentUserId()));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };

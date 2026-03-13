@@ -2,13 +2,12 @@ package com.jimmy.controller;
 
 import com.jimmy.common.result.Result;
 import com.jimmy.entity.Media;
-import com.jimmy.entity.enums.BucketName;
 import com.jimmy.req.CompleteChunkUploadReq;
 import com.jimmy.req.MediaReq;
 import com.jimmy.resp.MediaResp;
+import com.jimmy.security.SecurityUtils;
 import com.jimmy.service.MediaUploadService;
 import com.jimmy.utils.MinioUtil;
-import com.jimmy.utils.UserUtils;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,8 +46,8 @@ public class ChunkUploadController {
     @PostMapping("/init")
     public Result<InitUploadResp> InitUpload(@RequestBody InitUploadReq req) {
         String uploadId = UUID.randomUUID().toString();
-        minioUtil.createBucketIfNotExists(BucketName.MO_JING.getMsg());
-        return Result.success(new InitUploadResp(uploadId, BucketName.MO_JING.getMsg()));
+        minioUtil.createBucketIfNotExists(req.getBucketName());
+        return Result.success(new InitUploadResp(uploadId, req.getBucketName()));
     }
 
     /**
@@ -91,7 +90,7 @@ public class ChunkUploadController {
         saveMedia.setMediaType(req.getMediaType());
         saveMedia.setFileName(req.getFileName());
         saveMedia.setSize(req.getFileSize());
-        saveMedia.setUserId(UserUtils.getUserId());
+        saveMedia.setUserId(SecurityUtils.getCurrentUserId());
         saveMedia.setBucketName(req.getBucketName());
         Media media = mediaUploadService.saveMediaRecord(saveMedia);
 
@@ -138,6 +137,7 @@ public class ChunkUploadController {
         private Long fileSize;
         private Integer totalChunks;
         private String contentType;
+        private String bucketName;
     }
 
     @Data

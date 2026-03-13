@@ -6,8 +6,8 @@ import com.jimmy.req.AssignUserRoleDTO;
 import com.jimmy.req.SignUserSave;
 import com.jimmy.resp.RoleResp;
 import com.jimmy.resp.SignUserResp;
+import com.jimmy.security.SecurityUtils;
 import com.jimmy.service.SignUserService;
-import com.jimmy.utils.UserUtils;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -77,7 +77,7 @@ public class SignUserController {
      */
     @GetMapping("/ownerRoles")
     public Result<List<RoleResp>> getRolesByOwner(){
-        Long id = UserUtils.getUserId();
+        Long id = SecurityUtils.getCurrentUserId();
         return Result.success(signUserService.getRolesByOwner(id));
     }
 

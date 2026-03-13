@@ -35,7 +35,9 @@ public enum BadReqExceptionMsg {
 
     INVALID_DATE_FORMAT(40014,"日期格式不正确，应为yyyy-MM-dd"),
 
-    INVALID_TIME_RANGE_IS_NULL(40015, "时间范围参数为空");
+    INVALID_TIME_RANGE_IS_NULL(40015, "时间范围参数为空"),
+
+    REGISTER_ERROR(40016,"注册失败！");
 
     private final int code;
     private final String message;

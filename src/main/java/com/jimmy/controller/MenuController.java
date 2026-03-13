@@ -3,8 +3,8 @@ package com.jimmy.controller;
 import com.jimmy.common.result.Result;
 import com.jimmy.req.MenuSave;
 import com.jimmy.resp.MenuResp;
+import com.jimmy.security.SecurityUtils;
 import com.jimmy.service.MenuService;
-import com.jimmy.utils.UserUtils;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +21,7 @@ public class MenuController {
 
     @GetMapping("/list")
     public Result<List<MenuResp>> getMenuList() {
-        Long userId = UserUtils.getUserId();
+        Long userId = SecurityUtils.getCurrentUserId();
         List<MenuResp> menuList = menuService.getMenuListByUserId(userId);
         return Result.success(menuList);
     }

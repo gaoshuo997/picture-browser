@@ -2,8 +2,8 @@ package com.jimmy.controller;
 
 import com.jimmy.common.result.Result;
 import com.jimmy.resp.LearningProgressResp;
+import com.jimmy.security.SecurityUtils;
 import com.jimmy.service.ProgressService;
-import com.jimmy.utils.UserUtils;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,7 +20,7 @@ public class ProgressController {
 
     @GetMapping("/courses")
     public Result<List<LearningProgressResp>> getProgressList(){
-        Long userId = UserUtils.getUserId();
+        Long userId = SecurityUtils.getCurrentUserId();
         List<LearningProgressResp> progressList = progressService.getProgressList(userId);
         return Result.success(progressList);
     }
