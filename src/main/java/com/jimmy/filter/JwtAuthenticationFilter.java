@@ -1,6 +1,7 @@
 package com.jimmy.filter;
 
 import com.jimmy.jwt.JwtTokenProvider;
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Resource;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -38,9 +39,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * 从请求头中提取 JWT Token，验证并设置认证信息到 SecurityContext
      */
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@Nonnull HttpServletRequest request,
+                                    @Nonnull HttpServletResponse response,
+                                    @Nonnull FilterChain filterChain) throws ServletException, IOException {
         try {
             // 1. 从请求中提取 JWT Token
             String jwt = jwtTokenProvider.resolveToken(request);
@@ -107,7 +108,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * 判断当前请求是否应该被当前过滤器处理
      * 返回 true 表示跳过当前过滤器（不执行 doFilterInternal）
      * 返回 false 表示执行当前过滤器
-     *
      * 这里我们让过滤器处理所有请求，但在 doFilterInternal 中根据 Token 情况决定如何处理
      */
     @Override

@@ -1,25 +1,24 @@
 package com.jimmy.service.impl;
 
 import com.jimmy.common.PaginatedApiResult;
+import com.jimmy.common.exception.BadReqExceptionMsg;
+import com.jimmy.common.result.BusinessException;
 import com.jimmy.constant.DeleteFlag;
 import com.jimmy.constant.PredicateFieldName;
 import com.jimmy.constant.StatusFlag;
-import com.jimmy.entity.Menu;
-import com.jimmy.entity.Role;
-import com.jimmy.entity.RoleMenu;
+import com.jimmy.entity.*;
 import com.jimmy.entity.dto.RoleMenuCountDTO;
-import com.jimmy.repository.MenuRepository;
-import com.jimmy.repository.RoleMenuRepository;
+import com.jimmy.repository.*;
 import com.jimmy.req.RoleMenuSave;
 import com.jimmy.req.RoleReq;
 import com.jimmy.req.RoleSave;
 import com.jimmy.resp.RoleResp;
-import com.jimmy.repository.RoleRepository;
 import com.jimmy.service.RoleService;
 import com.jimmy.utils.DateUtils;
+import com.jimmy.utils.RoleMessageFormatter;
+import jakarta.annotation.Resource;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,20 +26,29 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(rollbackFor = Exception.class)
 public class RoleServiceImpl implements RoleService {
 
-    @Autowired
+    @Resource
     private RoleRepository roleRepository;
-    @Autowired
+    @Resource
     private RoleMenuRepository roleMenuRepository;
-    @Autowired
+    @Resource
     private MenuRepository menuRepository;
+    @Resource
+    private UserRoleRepository userRoleRepository;
+    @Resource
+    private SignUserRepository signUserRepository;
 
     @Override
     public PaginatedApiResult<RoleResp> list(Integer page, Integer pageSize) {
@@ -123,6 +131,19 @@ public class RoleServiceImpl implements RoleService {
     public void deleteById(Long id) {
         Role role = checkRoleIsExist(id);
 
+        // 如果该角色已经分配给激活用户了，提示
+        List<UserRole> userRolesByRoleId = userRoleRepository.findByRoleId(role.getId());
+        if (!CollectionUtils.isEmpty(userRolesByRoleId)){
+            Set<Long> userIds = userRolesByRoleId.stream()
+                    .map(UserRole::getUserId).collect(Collectors.toSet());
+            List<SignUser> byIdInAndStatus = signUserRepository.findByIdInAndStatus(userIds,
+                    StatusFlag.VALID.getFlag());
+
+            String message = new RoleMessageFormatter()
+                    .format(byIdInAndStatus.stream().map(SignUser::getLoginName).toList());
+            throw new BusinessException(message);
+        }
+
         // 删除角色菜单
         roleMenuRepository.deleteByRoleId(id);
 
@@ -158,6 +179,18 @@ public class RoleServiceImpl implements RoleService {
         List<RoleMenu> byRoleId = roleMenuRepository.findByRoleId(id);
         resp.setMenuIds(byRoleId.stream().map(RoleMenu::getMenuId).toList());
         return resp;
+    }
+
+    @Override
+    public void setStatus(Long id) {
+        Role role = checkRoleIsExist(id);
+        if (Objects.equals(role.getStatus(), StatusFlag.VALID.getFlag())){
+            role.setStatus(StatusFlag.INVALID.getFlag());
+        }else {
+            role.setStatus(StatusFlag.VALID.getFlag());
+        }
+        role.setUpdateAt(LocalDateTime.now());
+        roleRepository.save(role);
     }
 
     /**

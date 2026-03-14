@@ -9,6 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.constraints.NotNull;
 
+/**
+ * 公共访问接口（无需登录也可访问）
+ */
 @RestController
 @RequestMapping("/public")
 public class PublicMediaController {
@@ -16,6 +19,12 @@ public class PublicMediaController {
     @Autowired
     private MediaUploadService mediaUploadService;
 
+    /**
+     * 获取媒体列表（公共接口）
+     * @param page 页码
+     * @param size 大小
+     * @return 媒体列表
+     */
     @GetMapping("/media/list")
     public Result<PaginatedApiResult<MediaResp>> list(
             @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
@@ -28,6 +37,11 @@ public class PublicMediaController {
         return Result.success(pageResult);
     }
 
+    /**
+     * 获取媒体详情（公共接口）
+     * @param id 媒体ID
+     * @return 媒体详情
+     */
     @GetMapping("/media/{id}")
     public Result<MediaResp> getDetail(
             @PathVariable @NotNull(message = "媒体的id不能为空") Long id){
@@ -35,6 +49,11 @@ public class PublicMediaController {
         return Result.success(detail);
     }
 
+    /**
+     * 获取媒体的预签名地址（用于前端直接展示，不经过后端）
+     * @param id 媒体ID
+     * @return 返回预签名地址
+     */
     @GetMapping("/media/presignedUrl/{id}")
     public Result<String> getPreSignedUrl(
             @PathVariable @NotNull(message = "媒体的id不能为空") Long id){

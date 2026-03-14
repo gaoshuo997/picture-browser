@@ -101,6 +101,9 @@ public class ChunkUploadController {
         return Result.success(result);
     }
 
+    /**
+     * 上传视频封面
+     */
     @PostMapping("/coverFile")
     public Result<Map<String, Object>> coverFile(
             @RequestParam("coverFile") MultipartFile coverFile,

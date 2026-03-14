@@ -12,6 +12,9 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
+/**
+ * 媒体接口管理
+ */
 @RestController
 @RequestMapping("/media")
 public class MediaController {
@@ -22,6 +25,11 @@ public class MediaController {
     @Autowired
     private MediaUploadService mediaUploadService;
 
+    /**
+     * 上传图片接口
+     * @param multipartFile 图片数据
+     * @return 返回媒体信息
+     */
     @PostMapping("/upload/image")
     public Result<MediaResp> uploadImage(@RequestParam("file") MultipartFile multipartFile){
         minioUtil.checkFile(multipartFile, MediaType.IMAGE);
@@ -29,6 +37,13 @@ public class MediaController {
         return Result.success(resp);
     }
 
+    /**
+     * 分页查询媒体列表
+     * @param type 媒体类型（IMAGE：图片｜VIDEO：视频）
+     * @param page 页码
+     * @param size 每页多少条
+     * @return 返回分页列表
+     */
     @GetMapping("/list")
     public Result<PaginatedApiResult<MediaResp>> list(
             @Pattern(regexp = "IMAGE|VIDEO", message = "媒体类型错误")
@@ -41,6 +56,11 @@ public class MediaController {
         return Result.success(pageResult);
     }
 
+    /**
+     * 获取媒体详情
+     * @param id 媒体ID
+     * @return 媒体详情
+     */
     @GetMapping("/{id}")
     public Result<MediaResp> getDetail(
             @PathVariable @NotNull(message = "媒体的id不能为空") Long id){
@@ -48,6 +68,11 @@ public class MediaController {
         return Result.success(detail);
     }
 
+    /**
+     * 获取媒体的预签名地址（用于前端直接展示，不经过后端）
+     * @param id 媒体ID
+     * @return 返回预签名地址
+     */
     @GetMapping("/presignedUrl/{id}")
     public Result<String> getPreSignedUrl(
             @PathVariable @NotNull(message = "媒体的id不能为空") Long id){
@@ -55,8 +80,13 @@ public class MediaController {
         return Result.success(presignedUrl);
     }
 
+    /**
+     * 删除文件
+     * @param id 文件ID
+     * @return 空
+     */
     @DeleteMapping("/{id}")
-    public Result<?> delete(
+    public Result<Void> delete(
             @PathVariable @NotNull(message = "媒体的id不能为空") Long id){
         mediaUploadService.deleteById(id);
         return Result.success();

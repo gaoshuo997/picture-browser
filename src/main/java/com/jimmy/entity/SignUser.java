@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+// 用户信息表
 @Data
 @Entity
 @Table(name = "sign_user")

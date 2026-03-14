@@ -2,16 +2,15 @@ package com.jimmy.service.impl;
 
 import com.jimmy.constant.DeleteFlag;
 import com.jimmy.entity.Menu;
-import com.jimmy.entity.Role;
 import com.jimmy.entity.RoleMenu;
 import com.jimmy.entity.UserRole;
 import com.jimmy.entity.enums.RoleCode;
-import com.jimmy.repository.RoleRepository;
 import com.jimmy.req.MenuSave;
 import com.jimmy.repository.MenuRepository;
 import com.jimmy.repository.RoleMenuRepository;
 import com.jimmy.repository.UserRoleRepository;
 import com.jimmy.resp.MenuResp;
+import com.jimmy.security.SecurityUtils;
 import com.jimmy.service.MenuService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +33,6 @@ public class MenuServiceImpl implements MenuService {
 
     @Autowired
     private RoleMenuRepository roleMenuRepository;
-    @Autowired
-    private RoleRepository roleRepository;
 
     @Override
     public List<MenuResp> getMenuListByUserId(Long userId) {
@@ -45,17 +42,13 @@ public class MenuServiceImpl implements MenuService {
             return new ArrayList<>();
         }
 
-        // 根据用户拥有的角色查询角色信息
-        List<Role> rolesByUser = roleRepository.findAllById(userRoles.stream().map(UserRole::getRoleId).toList());
-        // 查看用户是否拥有超级管理员权限
-        Optional<Role> any = rolesByUser.stream()
-                .filter(role -> role.getRoleCode().equals(RoleCode.ADMIN.toString())).findAny();
         // 如果是超级管理员则获取所有菜单
-        if (any.isPresent()){
+        if (SecurityUtils.hasRole(RoleCode.ADMIN.toString())){
             List<MenuResp> menuRespList = buildMenuTree(menuRepository.findAllByDeleteFlag(0));
             menuRespList.sort(Comparator.comparingInt(MenuResp::getOrder));
             return menuRespList;
         }
+
         // 2. 获取角色ID列表
         List<Long> roleIds = userRoles.stream()
                 .map(UserRole::getRoleId)

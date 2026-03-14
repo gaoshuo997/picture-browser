@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+// 课程章节表
 @Data
 @Entity
 @Table(name = "statements")

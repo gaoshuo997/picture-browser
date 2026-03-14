@@ -3,6 +3,9 @@ package com.jimmy.entity.enums;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+/***
+ * 角色code 枚举值
+ */
 @Getter
 @AllArgsConstructor
 public enum RoleCode {

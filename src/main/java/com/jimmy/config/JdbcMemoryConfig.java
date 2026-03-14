@@ -8,6 +8,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+/**
+ * jdbc存储聊天记忆配置
+ */
 @Configuration
 public class JdbcMemoryConfig {
 

@@ -5,6 +5,7 @@ import lombok.Data;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+// 用户学习数据记录表
 @Entity
 @Table(name = "user_learn_record")
 @Data

@@ -8,6 +8,9 @@ import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * 用户聊天服务
+ */
 @RestController
 @RequestMapping("/chat")
 public class McpController {
@@ -15,6 +18,11 @@ public class McpController {
     @Resource
     private McpService mcpService;
 
+    /**
+     * ai回答用户提问
+     * @param req 问题
+     * @return 回答信息
+     */
     @PostMapping("/generate")
     public Result<AIChatResp> chat(
             @Valid @RequestBody AIChatReq req) {

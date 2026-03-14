@@ -17,6 +17,7 @@ import com.jimmy.repository.UserRoleRepository;
 import com.jimmy.req.SignUserSave;
 import com.jimmy.resp.RoleResp;
 import com.jimmy.resp.SignUserResp;
+import com.jimmy.security.SecurityUtils;
 import com.jimmy.service.SignUserService;
 import com.jimmy.utils.DateUtils;
 import jakarta.annotation.Resource;
@@ -162,6 +163,15 @@ public class SignUserServiceImpl implements SignUserService {
     @Override
     public List<RoleResp> getRolesByOwner(Long id) {
         checkUserIsExist(id);
+
+        // 如果是超级管理员，返回所有角色
+        if (SecurityUtils.hasRole(RoleCode.ADMIN.toString())){
+            return roleRepository.findRoleByStatus(StatusFlag.VALID.getFlag()).stream().map(role -> {
+                RoleResp resp = new RoleResp();
+                BeanUtils.copyProperties(role, resp);
+                return resp;
+            }).collect(Collectors.toList());
+        }
         List<UserRole> byUserId = userRoleRepository.findByUserId(id);
         if (CollectionUtils.isEmpty(byUserId)){
             return List.of();
@@ -169,18 +179,6 @@ public class SignUserServiceImpl implements SignUserService {
 
         List<Role> allRoleById = roleRepository.findAllByIdInAndStatus(byUserId.stream()
                 .map(UserRole::getRoleId).collect(Collectors.toSet()), StatusFlag.VALID.getFlag());
-        // 查看用户是否拥有超级管理员权限
-        Optional<Role> any = allRoleById.stream()
-                .filter(role -> role.getRoleCode().equals(RoleCode.ADMIN.toString())).findAny();
-
-        // 超级管理员拥有所有角色列表
-        if (any.isPresent()){
-            return roleRepository.findRoleByStatus(StatusFlag.VALID.getFlag()).stream().map(role -> {
-                RoleResp resp = new RoleResp();
-                BeanUtils.copyProperties(role, resp);
-                return resp;
-            }).collect(Collectors.toList());
-        }
 
         // 返回自己拥有的角色列表
         return allRoleById.stream().map(role -> {

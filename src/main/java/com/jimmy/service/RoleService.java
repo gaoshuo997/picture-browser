@@ -21,4 +21,6 @@ public interface RoleService {
     RoleResp update(Long id, RoleSave save);
 
     RoleResp detail(Long id);
+
+    void setStatus(Long id);
 }

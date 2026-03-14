@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * 统计信息接口
+ */
 @RestController
 @RequestMapping("/statistics")
 public class StatisticController {
@@ -17,12 +20,14 @@ public class StatisticController {
     @Resource
     private StatisticService statisticService;
 
+    // 获取所有学习时长
     @GetMapping("/duration")
     public Result<List<StudyDurationResp>> getDuration(){
         List<StudyDurationResp> duration = statisticService.getDuration();
         return Result.success(duration);
     }
 
+    // 获取当天的学习时长
     @GetMapping("/duration/today")
     public Result<StudyDurationResp> getDurationByDay(){
         StudyDurationResp durationByDay = statisticService.getDurationByDay();

@@ -11,13 +11,18 @@ import com.jimmy.service.SignUserService;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * 用户控制器（只允许管理员进入）
+ */
 @RestController
 @RequestMapping("/sign-user")
+@PreAuthorize("hasAnyRole('ADMIN')")
 public class SignUserController {
 
     @Resource
@@ -40,6 +45,24 @@ public class SignUserController {
         return Result.success(result);
     }
 
+    /**
+     * 新增用户
+     * @param save 用户保存对象
+     * @return void
+     */
+    @PostMapping("/save")
+    public Result<Void> save(
+            @Valid @RequestBody SignUserSave save) {
+        signUserService.insertSignUser(save);
+        return Result.success();
+    }
+
+    /**
+     * 更新用户
+     * @param id 更新用户的id
+     * @param save 用户保存对象
+     * @return void
+     */
     @PutMapping("/update/{id}")
     public Result<Void> update(
             @PathVariable @NotNull(message = "用户ID不能为空") Long id,
@@ -50,7 +73,7 @@ public class SignUserController {
 
     /**
      * 删除用户
-     * @param id 删除用户的id
+     * @param id 用户的id
      * @return void
      */
     @DeleteMapping("/delete/{id}")

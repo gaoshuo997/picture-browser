@@ -1,12 +1,15 @@
 package com.jimmy.entity.enums;
 
+/**
+ * 媒体类型
+ */
 public enum MediaType {
     /**
-     * 反渗漏
+     * 图片
      */
     IMAGE,
     /**
-     * 反欺诈
+     * 视频
      */
     VIDEO;
 }

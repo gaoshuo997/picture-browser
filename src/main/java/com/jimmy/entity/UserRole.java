@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+// 用户角色关联表
 @Data
 @Entity(name = "user_role")
 public class UserRole {

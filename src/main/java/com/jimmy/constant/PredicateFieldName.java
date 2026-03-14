@@ -2,6 +2,9 @@ package com.jimmy.constant;
 
 import lombok.Getter;
 
+/**
+ * 查询字段（entity）名枚举
+ */
 @Getter
 public enum PredicateFieldName {
     COURSE_ID("courseId"),

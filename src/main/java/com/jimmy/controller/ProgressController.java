@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * 学习进度接口
+ */
 @RestController
 @RequestMapping("/progress")
 public class ProgressController {
@@ -18,6 +21,10 @@ public class ProgressController {
     @Resource
     private ProgressService progressService;
 
+    /**
+     * 获取学习进度列表
+     * @return 学习进度列表
+     */
     @GetMapping("/courses")
     public Result<List<LearningProgressResp>> getProgressList(){
         Long userId = SecurityUtils.getCurrentUserId();

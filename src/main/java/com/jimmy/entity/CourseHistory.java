@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+// 课程完成历史记录表
 @Data
 @Entity
 @Table(name = "course_history")

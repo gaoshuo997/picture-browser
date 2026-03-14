@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
+// 用户课程学习进度表
 @Data
 @Entity
 @Table(name = "user_course_progress")

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+// 角色菜单关联表
 @Data
 @Entity(name = "role_menu")
 public class RoleMenu {

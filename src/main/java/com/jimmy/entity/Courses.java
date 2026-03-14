@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+// 课程表
 @Data
 @Entity
 @Table(name = "courses")

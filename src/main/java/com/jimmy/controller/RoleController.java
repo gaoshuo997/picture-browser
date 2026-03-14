@@ -8,17 +8,25 @@ import com.jimmy.resp.RoleResp;
 import com.jimmy.service.RoleService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
+/**
+ * 角色控制器（只允许管理员进入）
+ */
 @RestController
 @RequestMapping("/role")
+@PreAuthorize("hasAnyRole('ADMIN')")
 public class RoleController {
 
     @Autowired
     private RoleService roleService;
 
+    /**
+     * 分页获取角色列表
+     */
     @GetMapping("/page")
     public Result<PaginatedApiResult<RoleResp>> list(
             @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
@@ -30,6 +38,9 @@ public class RoleController {
         return Result.success(result);
     }
 
+    /**
+     * 获取角色对应的菜单ID集合
+     */
     @GetMapping("/menus/{id}")
     public Result<List<String>> getRoleMenuIds(
             @PathVariable @NotNull(message = "角色ID不能为空") Long id) {
@@ -82,5 +93,16 @@ public class RoleController {
     @GetMapping("/{id}")
     public Result<RoleResp> get(@PathVariable @NotNull(message = "角色ID不能为空") Long id){
         return Result.success(roleService.detail(id));
+    }
+
+    /**
+     * 启用/禁用角色
+     * @param id 角色ID
+     * @return void
+     */
+    @PutMapping("/{id}/setStatus")
+    public Result<Void> setStatus(@PathVariable @NotNull(message = "角色ID不能为空") Long id){
+        roleService.setStatus(id);
+        return Result.success();
     }
 }

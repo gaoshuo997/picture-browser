@@ -61,7 +61,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             log.warn("用户已被禁用 - userId: {}", userId);
             throw new BusinessException(BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getCode(),
                     BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getMessage());
-//            throw new UsernameNotFoundException("用户已被禁用");
         }
 
         // 获取用户角色列表

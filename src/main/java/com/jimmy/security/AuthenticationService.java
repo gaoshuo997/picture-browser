@@ -10,10 +10,7 @@ import com.jimmy.req.SignUserSave;
 import com.jimmy.service.SignUserService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 
@@ -27,9 +24,6 @@ import java.util.Map;
 @Slf4j
 @Service
 public class AuthenticationService {
-
-    @Resource
-    private AuthenticationManager authenticationManager;
 
     @Resource
     private SignUserService signUserService;

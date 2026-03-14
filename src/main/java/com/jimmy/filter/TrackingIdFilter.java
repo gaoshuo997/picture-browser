@@ -15,6 +15,11 @@ import org.springframework.web.filter.GenericFilterBean;
 import java.io.IOException;
 import java.util.UUID;
 
+/**
+ * 请求链路追踪 ID 过滤器
+ * <p>
+ * 用于在请求头中传递追踪 ID，便于日志追踪
+ */
 @Component
 public class TrackingIdFilter extends GenericFilterBean {
     @Override

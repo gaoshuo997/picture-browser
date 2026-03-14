@@ -77,29 +77,4 @@ public class RedisConfig {
         return stringRedisTemplate;
     }
 
-
-    /**
-     * 可选：自定义Lettuce连接工厂配置（覆盖默认配置，精细控制连接参数）
-     * 如需定制Lettuce底层参数（如超时、集群配置），可启用此Bean
-     */
-    /*
-    @Bean
-    public LettuceConnectionFactory lettuceConnectionFactory(RedisProperties redisProperties) {
-        // 1. 构建客户端配置
-        LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
-                .commandTimeout(redisProperties.getTimeout()) // 命令超时
-                .shutdownTimeout(redisProperties.getLettuce().getShutdownTimeout()) // 关闭超时
-                .build();
-
-        // 2. 构建连接配置
-        RedisStandaloneConfiguration standaloneConfig = new RedisStandaloneConfiguration();
-        standaloneConfig.setHostName(redisProperties.getHost());
-        standaloneConfig.setPort(redisProperties.getPort());
-        standaloneConfig.setPassword(RedisPassword.of(redisProperties.getPassword()));
-        standaloneConfig.setDatabase(redisProperties.getDatabase());
-
-        // 3. 创建连接工厂
-        return new LettuceConnectionFactory(standaloneConfig, clientConfig);
-    }
-    */
 }

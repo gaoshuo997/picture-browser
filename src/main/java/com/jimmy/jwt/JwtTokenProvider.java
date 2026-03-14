@@ -35,7 +35,6 @@ public class JwtTokenProvider {
    * @return 加密后的 JWT Token 字符串
    */
   public String generateToken(Long userId, Map<String, Object> extraClaims) {
-
     Date now = new Date();
     // 2. 构建 Token 并加密返回
     return Jwts.builder()

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+// 媒体文件信息表
 @Data
 @Entity
 @Table(name = "media")

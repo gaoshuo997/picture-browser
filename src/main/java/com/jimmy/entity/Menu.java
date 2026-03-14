@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+// 菜单表
 @Data
 @Entity(name = "menu")
 public class Menu {

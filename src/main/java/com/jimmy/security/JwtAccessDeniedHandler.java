@@ -3,7 +3,6 @@ package com.jimmy.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jimmy.common.result.Result;
 import com.jimmy.common.result.ResultCode;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +31,7 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
     @Override
     public void handle(HttpServletRequest request,
                       HttpServletResponse response,
-                      AccessDeniedException accessDeniedException) throws IOException, ServletException {
+                      AccessDeniedException accessDeniedException) throws IOException {
         // 记录访问拒绝日志
         log.warn("访问被拒绝 - URI: {}, 用户: {}, 错误信息: {}",
                 request.getRequestURI(),

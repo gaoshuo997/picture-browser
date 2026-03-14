@@ -37,7 +37,9 @@ public enum BadReqExceptionMsg {
 
     INVALID_TIME_RANGE_IS_NULL(40015, "时间范围参数为空"),
 
-    REGISTER_ERROR(40016,"注册失败！");
+    REGISTER_ERROR(40016,"注册失败！"),
+
+    EXIST_ROLE_BY_USER(40017,"该角色已经分配给用户了，无法删除");
 
     private final int code;
     private final String message;
