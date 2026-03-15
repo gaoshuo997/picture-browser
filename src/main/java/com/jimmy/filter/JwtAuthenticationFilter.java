@@ -1,6 +1,9 @@
 package com.jimmy.filter;
 
+import com.jimmy.common.exception.ErrorMsg;
+import com.jimmy.common.result.BusinessException;
 import com.jimmy.jwt.JwtTokenProvider;
+import com.jimmy.service.BlacklistService;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Resource;
 import jakarta.servlet.FilterChain;
@@ -34,6 +37,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Resource
     private UserDetailsService userDetailsService;
 
+    @Resource
+    private BlacklistService blacklistService;
+
     /**
      * 过滤器核心方法
      * 从请求头中提取 JWT Token，验证并设置认证信息到 SecurityContext
@@ -50,48 +56,54 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String requestURI = request.getRequestURI();
 
             // 3. 检查 Token 是否有效
-            if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
-                // 3.1 从 Token 中提取用户ID
-                Long userId = jwtTokenProvider.getUserId(jwt);
+            if (!StringUtils.hasText(jwt)){
+                filterChain.doFilter(request, response);
+                return;
+            }
 
-                log.debug("JWT Token 验证成功 - userId: {}, URI: {}", userId, requestURI);
+            // 检查用户是否进入黑名单
+            if (blacklistService.isBlacklisted(jwt)){
+                throw new BusinessException(ErrorMsg.EXIST_IN_BLACKLIST.getMsg());
+            }
 
-                // 3.2 检查当前用户是否已通过认证
-                // SecurityContextHolder 存储了当前线程的安全上下文
-                if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    // 3.3 从 UserDetailsService 加载用户详情
-                    // 这里会查询数据库获取用户信息和权限
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(userId.toString());
+            if (!jwtTokenProvider.validateToken(jwt)){
+                log.warn("JWT Token 验证失败");
+                // 这里可以抛异常，或者直接返回 401 JSON
+                // 建议直接写入响应并返回，避免抛出 ServletException 导致进入容器错误页
+                throw new BusinessException(ErrorMsg.TOKEN_CHECK_ERROR.getMsg());
+            }
 
-                    // 3.4 创建认证令牌
-                    // UsernamePasswordAuthenticationToken 是 Spring Security 的标准认证令牌
-                    UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(
-                            userDetails,           // 用户信息
-                            null,                  // 凭证（已验证过，设为 null）
-                            userDetails.getAuthorities()  // 用户权限列表
-                        );
+            // 3.1 从 Token 中提取用户ID
+            Long userId = jwtTokenProvider.getUserId(jwt);
 
-                    // 3.5 设置请求详情（记录 IP、SessionId 等）
-                    authenticationToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
+            // 3.2 检查当前用户是否已通过认证
+            // SecurityContextHolder 存储了当前线程的安全上下文
+            if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                // 3.3 从 UserDetailsService 加载用户详情
+                // 这里会查询数据库获取用户信息和权限
+                UserDetails userDetails = userDetailsService.loadUserByUsername(userId.toString());
+
+                // 3.4 创建认证令牌
+                // UsernamePasswordAuthenticationToken 是 Spring Security 的标准认证令牌
+                UsernamePasswordAuthenticationToken authenticationToken =
+                    new UsernamePasswordAuthenticationToken(
+                        userDetails,           // 用户信息
+                        null,                  // 凭证（已验证过，设为 null）
+                        userDetails.getAuthorities()  // 用户权限列表
                     );
 
-                    // 3.6 将认证信息存入 SecurityContext
-                    // 此后当前线程的所有代码都可以通过 SecurityContext 获取用户信息
-                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                // 3.5 设置请求详情（记录 IP、SessionId 等）
+                authenticationToken.setDetails(
+                    new WebAuthenticationDetailsSource().buildDetails(request)
+                );
 
-                    log.debug("用户认证成功 - userId: {}, authorities: {}",
-                        userId, userDetails.getAuthorities());
-                }
-            } else {
-                // Token 无效或不存在，记录日志
-                if (StringUtils.hasText(jwt)) {
-                    log.warn("JWT Token 验证失败 - URI: {}", requestURI);
-                } else {
-                    log.debug("请求未携带 JWT Token - URI: {}", requestURI);
-                }
+                // 3.6 将认证信息存入 SecurityContext
+                // 此后当前线程的所有代码都可以通过 SecurityContext 获取用户信息
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                log.debug("用户认证成功 - userId: {}, authorities: {}",
+                    userId, userDetails.getAuthorities());
             }
+
         } catch (Exception e) {
             // 捕获所有异常，记录错误日志
             log.error("JWT 认证过滤器处理异常: {}", e.getMessage(), e);

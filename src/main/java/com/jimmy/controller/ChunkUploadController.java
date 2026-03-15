@@ -67,7 +67,7 @@ public class ChunkUploadController {
             String chunkName = CompletableFuture.supplyAsync(() ->
                     minioUtil.uploadChunk(bucketName, uploadId, chunkNumber,
                             new ByteArrayInputStream(chunkData), chunkSize), taskExecutor).get();
-            return Result.success(chunkName);
+            return Result.successWithMessage(chunkName);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("上传分片被中断", e);

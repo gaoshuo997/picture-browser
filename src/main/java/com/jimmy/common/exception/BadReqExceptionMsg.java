@@ -15,7 +15,7 @@ public enum BadReqExceptionMsg {
 
     PASSWORD_ERROR(40004,"密码错误"),
 
-    SIGN_USER_NOT_EXIST(40005,"该用户不存在或被禁用"),
+    SIGN_USER_NOT_EXIST(40005,"该用户不存在"),
 
     UPLOAD_IMG_IS_NULL(40006,"上传文件为空！"),
 
@@ -39,7 +39,9 @@ public enum BadReqExceptionMsg {
 
     REGISTER_ERROR(40016,"注册失败！"),
 
-    EXIST_ROLE_BY_USER(40017,"该角色已经分配给用户了，无法删除");
+    EXIST_ROLE_BY_USER(40017,"该角色已经分配给用户了，无法删除"),
+
+    SIGN_USER_IS_INVALID(40018,"该用户已被禁用");
 
     private final int code;
     private final String message;

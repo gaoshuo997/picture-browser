@@ -141,7 +141,7 @@ public class RoleServiceImpl implements RoleService {
 
             String message = new RoleMessageFormatter()
                     .format(byIdInAndStatus.stream().map(SignUser::getLoginName).toList());
-            throw new BusinessException(message);
+            throw new BusinessException(BadReqExceptionMsg.EXIST_ROLE_BY_USER.getCode(),message);
         }
 
         // 删除角色菜单

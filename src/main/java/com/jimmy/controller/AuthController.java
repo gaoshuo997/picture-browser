@@ -65,7 +65,7 @@ public class AuthController {
     public Result<?> logout(HttpServletRequest request) {
         log.info("用户登出");
         SecurityUtils.clearContext();
-        return Result.success("退出登录成功");
+        return Result.successWithMessage("退出登录成功");
     }
 
     /**
@@ -79,7 +79,7 @@ public class AuthController {
     public Result<?> getCurrentUser() {
         // 可以从 SecurityContext 获取当前用户信息
         // 这里简化处理，实际应根据业务需求返回
-        return Result.success("获取当前用户信息");
+        return Result.successWithMessage("获取当前用户信息");
     }
 
     /**

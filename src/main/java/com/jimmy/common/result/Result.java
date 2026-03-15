@@ -2,8 +2,6 @@ package com.jimmy.common.result;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
-
-import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -75,7 +73,7 @@ public class Result<T> implements Serializable {
     /**
      * 成功返回（自定义消息）
      */
-    public static <T> Result<T> success(String message) {
+    public static <T> Result<T> successWithMessage(String message) {
         return new Result<>(ResultCode.SUCCESS.getCode(), message);
     }
 

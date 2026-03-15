@@ -116,4 +116,29 @@ public class JwtTokenProvider {
     return refreshedToken;
   }
 
+  /**
+   * 获取 JWT Token 的剩余有效时间（秒）
+   * @param token JWT 字符串
+   * @return 剩余秒数；如果 Token 无效或已过期，返回 -1 或 0
+   */
+  public long getJwtRemainingTime(String token) {
+    try {
+      Claims claims = getClaimsFromToken(token);
+
+      Date expirationDate = claims.getExpiration();
+      if (expirationDate == null) {
+        return -1; // 没有设置过期时间
+      }
+
+      long now = System.currentTimeMillis();
+      long expTime = expirationDate.getTime();
+      long remaining = (expTime - now) / 1000;
+
+      return remaining > 0 ? remaining : 0;
+    } catch (Exception e) {
+      // Token 无效、签名错误或已过期
+      return -1;
+    }
+  }
+
 }

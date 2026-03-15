@@ -25,6 +25,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.redis.core.ExpireChanges;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,6 +69,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
 
             MediaResp resp = new MediaResp();
             BeanUtils.copyProperties(save, resp);
+            resp.setCreateAt(DateUtils.format(save.getCreatedAt(), DateUtils.DATETIME_FORMAT));
             return resp;
         } catch (RuntimeException e) {
             minioUtil.removeObject(BucketName.MO_JING.getMsg(), resultRecord.fileName());
@@ -167,14 +169,24 @@ public class MediaUploadServiceImpl implements MediaUploadService {
                     .get(RedisKeyName.MEDIA_PRE_SiGN_URL.getName(), idStr)).toString();
         }
         Media media = checkMediaExistOrNot(id);
-        String presignedObjectUrl = minioUtil.getPresignedObjectUrl(media.getBucketName(), media.getObjectName());
+        try {
+            String presignedObjectUrl = minioUtil.getPresignedObjectUrl(media.getBucketName(), media.getObjectName());
+            media.setUrl(presignedObjectUrl);
+            mediaRepository.save(media);
 
-        stringRedisTemplate.opsForHash().put(redisKey, idStr, presignedObjectUrl);
-        Boolean expireResult = stringRedisTemplate.expire(redisKey, Duration.ofHours(12));
-        if (!Boolean.TRUE.equals(expireResult)) {
-            log.warn("Set Redis TTL failed for key: {}, result: {}", redisKey, expireResult);
+            stringRedisTemplate.opsForHash().put(redisKey, idStr, presignedObjectUrl);
+            ExpireChanges<Object> expire = stringRedisTemplate.opsForHash().expire(redisKey, Duration.ofSeconds(minioUtil.getExpireTime()),
+                    Collections.singletonList(idStr));
+//        Boolean expireResult = stringRedisTemplate.expire(redisKey, Duration.ofHours(12));
+            if (expire == null || !expire.allChanged()) {
+                log.warn("Set Redis TTL failed for key: {}, 媒体文件ID: {}", redisKey, idStr);
+                stringRedisTemplate.opsForHash().delete(redisKey, idStr);
+            }
+            return presignedObjectUrl;
+        }catch (Exception e){
+            throw new BusinessException(BadReqExceptionMsg.PRE_SIGNED_ERROR.getCode(),
+                    BadReqExceptionMsg.PRE_SIGNED_ERROR.getMessage());
         }
-        return minioUtil.getPresignedObjectUrl(media.getBucketName(),media.getObjectName());
     }
 
     /**

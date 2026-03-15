@@ -18,7 +18,6 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/menu")
-@PreAuthorize("hasAnyRole('ADMIN')")
 public class MenuController {
 
     @Autowired
@@ -40,6 +39,7 @@ public class MenuController {
      * @param menuSave 菜单保存参数
      * @return 空
      */
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PostMapping("/create")
     public Result<Void> saveMenu(@Valid @RequestBody MenuSave menuSave) {
         menuService.saveMenu(menuSave);
@@ -52,6 +52,7 @@ public class MenuController {
      * @param menuSave 菜单更新参数
      * @return 空
      */
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/update/{id}")
     public Result<Void> updateMenu(
             @PathVariable @NotNull(message = "角色ID不能为空") Long id,
@@ -65,6 +66,7 @@ public class MenuController {
      * @param id 菜单ID
      * @return void
      */
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping("/delete/{id}")
     public Result<Void> deleteMenu(@PathVariable @NotNull(message = "菜单ID不能为空") Long id){
         menuService.deleteMenuById(id);

@@ -8,9 +8,9 @@ import lombok.Getter;
 @Getter
 public enum StatusFlag {
 
-    // 启用
-    INVALID(0),
     // 禁用
+    INVALID(0),
+    // 启用
     VALID(1);
 
     private final Integer flag;

@@ -59,8 +59,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         // 检查用户状态 (假设 status 为 0 表示禁用，deleteFlag为1表示已删除)
         if (user.getStatus() != null && StatusFlag.INVALID.getFlag().equals(user.getStatus())) {
             log.warn("用户已被禁用 - userId: {}", userId);
-            throw new BusinessException(BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getCode(),
-                    BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getMessage());
+            throw new BusinessException(BadReqExceptionMsg.SIGN_USER_IS_INVALID.getCode(),
+                    BadReqExceptionMsg.SIGN_USER_IS_INVALID.getMessage());
         }
 
         // 获取用户角色列表

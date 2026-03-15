@@ -1,14 +1,12 @@
 package com.jimmy.controller;
 
 import com.jimmy.common.result.Result;
+import com.jimmy.req.CoursePacksSave;
 import com.jimmy.resp.CoursePacksResp;
 import com.jimmy.service.CoursePacksService;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -42,5 +40,26 @@ public class CoursePacksController {
             @PathVariable @NotNull(message = "id不能为空") Long id) {
         CoursePacksResp coursePacksResp = coursePacksService.fetch(id);
         return Result.success(coursePacksResp);
+    }
+
+    /**
+     * 新增课程包
+     * @param save 课程包新增参数
+     */
+    @PostMapping("/create")
+    public Result<Void> create(@RequestBody CoursePacksSave save) {
+        coursePacksService.create(save);
+        return Result.success();
+    }
+
+    /**
+     * 更新课程包
+     */
+    @PutMapping("/update/{id}")
+    public Result<Void> update(
+            @PathVariable @NotNull(message = "id不能为空") Long id,
+            @RequestBody CoursePacksSave save) {
+        coursePacksService.update(id, save);
+        return Result.success();
     }
 }

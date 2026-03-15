@@ -1,19 +1,23 @@
 package com.jimmy.service.impl;
 
+import com.jimmy.common.result.BusinessException;
 import com.jimmy.entity.CourseHistory;
 import com.jimmy.entity.CoursePacks;
 import com.jimmy.entity.Courses;
 import com.jimmy.entity.Statements;
 import com.jimmy.repository.*;
+import com.jimmy.req.CoursePacksSave;
 import com.jimmy.resp.CoursePacksResp;
 import com.jimmy.resp.CourseResp;
 import com.jimmy.service.CoursePacksService;
 import com.jimmy.utils.DateUtils;
 import jakarta.annotation.Resource;
+import com.jimmy.security.SecurityUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -76,5 +80,33 @@ public class CoursePacksServiceImpl implements CoursePacksService {
             return resp;
         }
         return null;
+    }
+
+    @Override
+    public void create(CoursePacksSave save) {
+        LocalDateTime now = LocalDateTime.now();
+        CoursePacks coursePacks = new CoursePacks();
+        BeanUtils.copyProperties(save, coursePacks);
+        coursePacks.setCreatedAt(now);
+        coursePacks.setUpdatedAt(now);
+        coursePacks.setCreatorId(SecurityUtils.getCurrentUserId());
+        coursePacksRepository.save(coursePacks);
+
+    }
+
+    @Override
+    public void update(Long id, CoursePacksSave save) {
+        CoursePacks coursePacks = checkCoursePacksExists(id);
+        BeanUtils.copyProperties(save, coursePacks);
+        coursePacks.setUpdatedAt(LocalDateTime.now());
+        coursePacksRepository.save(coursePacks);
+    }
+
+    private CoursePacks checkCoursePacksExists(Long id) {
+        Optional<CoursePacks> byId = coursePacksRepository.findById(id);
+        if (byId.isEmpty()) {
+            throw new BusinessException("课程包不存在");
+        }
+        return byId.get();
     }
 }

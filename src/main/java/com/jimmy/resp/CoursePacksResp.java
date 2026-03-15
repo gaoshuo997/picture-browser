@@ -16,6 +16,8 @@ public class CoursePacksResp {
 
     private String cover;
 
+    private String coverFileName;
+
     private List<CourseResp> courses;
 
     private Integer courseCount;

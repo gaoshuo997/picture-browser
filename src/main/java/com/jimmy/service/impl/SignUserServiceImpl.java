@@ -9,7 +9,9 @@ import com.jimmy.constant.StatusFlag;
 import com.jimmy.entity.Role;
 import com.jimmy.entity.SignUser;
 import com.jimmy.entity.UserRole;
+import com.jimmy.entity.enums.RedisKeyName;
 import com.jimmy.entity.enums.RoleCode;
+import com.jimmy.jwt.JwtTokenProvider;
 import com.jimmy.mapperStruct.SignUserMapper;
 import com.jimmy.repository.RoleRepository;
 import com.jimmy.repository.SignUserRepository;
@@ -18,26 +20,32 @@ import com.jimmy.req.SignUserSave;
 import com.jimmy.resp.RoleResp;
 import com.jimmy.resp.SignUserResp;
 import com.jimmy.security.SecurityUtils;
+import com.jimmy.service.BlacklistService;
 import com.jimmy.service.SignUserService;
 import com.jimmy.utils.DateUtils;
 import jakarta.annotation.Resource;
 import jakarta.persistence.criteria.Predicate;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
+
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @Transactional(rollbackFor = Exception.class)
+@Slf4j
 public class SignUserServiceImpl implements SignUserService {
 
     @Resource
@@ -50,6 +58,12 @@ public class SignUserServiceImpl implements SignUserService {
     private UserRoleRepository userRoleRepository;
     @Resource
     private RoleRepository roleRepository;
+    @Resource
+    private BlacklistService blacklistService;
+    @Resource
+    private JwtTokenProvider jwtTokenProvider;
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     @Override
     public SignUser insertSignUser(SignUserSave save) {
@@ -95,8 +109,8 @@ public class SignUserServiceImpl implements SignUserService {
     public SignUser checkSignUser(String loginUserName, String password) {
         SignUser signUser = signUserRepository.findSignUserByLoginNameIgnoreCaseAndStatus(loginUserName, StatusFlag.VALID.getFlag());
         if (signUser == null){
-            throw new BusinessException(BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getCode(),
-                    BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getMessage());
+            throw new BusinessException(BadReqExceptionMsg.SIGN_USER_IS_INVALID.getCode(),
+                    BadReqExceptionMsg.SIGN_USER_IS_INVALID.getMessage());
         }
         if (!passwordEncoder.matches(password, signUser.getPassword())){
             throw new BusinessException(BadReqExceptionMsg.PASSWORD_ERROR.getCode(),
@@ -210,9 +224,21 @@ public class SignUserServiceImpl implements SignUserService {
 
     @Override
     public void setStatus(Long id) {
-        SignUser signUser = checkUserIsExist(id);
+        SignUser signUser = signUserRepository.findSignUsersByIdAndDeleteFlag(id,DeleteFlag.NORMAL.getFlag());
+        if (Objects.isNull(signUser)){
+            throw new BusinessException(BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getCode(),
+                    BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getMessage());
+        }
         if (Objects.equals(signUser.getStatus(), StatusFlag.VALID.getFlag())){
             signUser.setStatus(StatusFlag.INVALID.getFlag());
+
+            // 禁用用户，将其放入黑名单
+            String token = stringRedisTemplate.opsForValue().get(RedisKeyName.SIGN_USER_TOKEN_PREFIX.getName() + id);
+            if (StringUtils.hasText(token)){
+                long jwtRemainingTime = jwtTokenProvider.getJwtRemainingTime(token);
+                blacklistService.addToBlacklist(token,jwtRemainingTime);
+                log.info("用户:{}已被踢下线，token已加入黑名单", signUser.getLoginName());
+            }
         }else {
             signUser.setStatus(StatusFlag.VALID.getFlag());
         }
@@ -228,8 +254,8 @@ public class SignUserServiceImpl implements SignUserService {
      */
     private SignUser checkUserIsExist(Long id){
         return signUserRepository.findByIdAndStatus(id, StatusFlag.VALID.getFlag()).orElseThrow(() ->
-                new BusinessException(BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getCode(),
-                        BadReqExceptionMsg.SIGN_USER_NOT_EXIST.getMessage()));
+                new BusinessException(BadReqExceptionMsg.SIGN_USER_IS_INVALID.getCode(),
+                        BadReqExceptionMsg.SIGN_USER_IS_INVALID.getMessage()));
     }
 
     /**

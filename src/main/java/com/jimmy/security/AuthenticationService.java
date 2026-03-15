@@ -4,18 +4,21 @@ import com.jimmy.common.exception.BadReqExceptionMsg;
 import com.jimmy.common.result.BusinessException;
 import com.jimmy.common.result.Result;
 import com.jimmy.entity.SignUser;
+import com.jimmy.entity.enums.RedisKeyName;
 import com.jimmy.jwt.JwtTokenProvider;
 import com.jimmy.req.LoginUserReq;
 import com.jimmy.req.SignUserSave;
 import com.jimmy.service.SignUserService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 认证服务
@@ -30,6 +33,9 @@ public class AuthenticationService {
 
     @Resource
     private JwtTokenProvider jwtTokenProvider;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     /**
      * 用户登录
@@ -51,6 +57,10 @@ public class AuthenticationService {
             extraClaims.put("loginName", signUser.getLoginName());
 
             String token = jwtTokenProvider.generateToken(signUser.getId(), extraClaims);
+
+            // 将token放入redis
+            stringRedisTemplate.opsForValue().set(RedisKeyName.SIGN_USER_TOKEN_PREFIX.getName() + signUser.getId(),
+                    token, jwtTokenProvider.getJwtRemainingTime(token), TimeUnit.SECONDS);
 
             // 构建响应结果
             Map<String, Object> resultMap = new HashMap<>();

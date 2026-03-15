@@ -14,22 +14,25 @@ public class CoursePacks {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "title", nullable = false)
+    @Column(name = "title", nullable = false, length = 32)
     private String title;
 
-    @Column(name = "description")
+    @Column(name = "description", length = 64)
     private String description;
 
     @Column(name = "is_free")
     private Boolean free;
 
-    @Column(name = "cover")
+    @Column(name = "cover", length = 2048, nullable = false)
     private String cover;
+
+    @Column(name = "cover_file_name", nullable = false)
+    private String coverFileName;
 
     @Column(name = "creator_id", nullable = false)
     private Long creatorId;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")

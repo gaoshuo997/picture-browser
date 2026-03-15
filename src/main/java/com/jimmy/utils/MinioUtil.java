@@ -273,4 +273,8 @@ public class MinioUtil {
                     BadReqExceptionMsg.PRE_SIGNED_ERROR.getMessage());
         }
     }
+
+    public Integer getExpireTime(){
+        return this.expireTime;
+    }
 }
