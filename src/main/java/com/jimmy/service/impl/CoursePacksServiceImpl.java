@@ -1,10 +1,8 @@
 package com.jimmy.service.impl;
 
 import com.jimmy.common.result.BusinessException;
-import com.jimmy.entity.CourseHistory;
-import com.jimmy.entity.CoursePacks;
-import com.jimmy.entity.Courses;
-import com.jimmy.entity.Statements;
+import com.jimmy.constant.PredicateFieldName;
+import com.jimmy.entity.*;
 import com.jimmy.repository.*;
 import com.jimmy.req.CoursePacksSave;
 import com.jimmy.resp.CoursePacksResp;
@@ -14,6 +12,7 @@ import com.jimmy.utils.DateUtils;
 import jakarta.annotation.Resource;
 import com.jimmy.security.SecurityUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,15 +32,27 @@ public class CoursePacksServiceImpl implements CoursePacksService {
     private CourseHistoryRepository courseHistoryRepository;
     @Resource
     private StatementsRepository statementsRepository;
+    @Resource
+    private MediaRepository mediaRepository;
 
     @Override
     public List<CoursePacksResp> list() {
-        List<CoursePacks> all = coursePacksRepository.findAll();
+        Sort sortByCreateAt = Sort.by(Sort.Direction.ASC, PredicateFieldName.CREATED_AT.getName());
+        List<CoursePacks> all = coursePacksRepository.findAll(sortByCreateAt);
+
+        List<Media> allMediaById = mediaRepository.findAllById(all.stream().map(CoursePacks::getCover).toList());
         List<CoursePacksResp> result = new ArrayList<>();
         for (CoursePacks coursePacks : all) {
             CoursePacksResp resp = new CoursePacksResp();
             BeanUtils.copyProperties(coursePacks,resp);
             resp.setCourseCount(coursesRepository.countByCoursePackId(coursePacks.getId()));
+
+            Optional<Media> first = allMediaById.stream()
+                    .filter(media -> media.getId().equals(coursePacks.getCover())).findFirst();
+            if (first.isPresent()){
+                resp.setCoverUrl(first.get().getUrl());
+                resp.setCoverFileName(first.get().getFileName());
+            }
             result.add(resp);
         }
         return result;
@@ -77,6 +88,11 @@ public class CoursePacksServiceImpl implements CoursePacksService {
                 courseResp.setStatementCount(statementGroup.get(course.getId()).size());
                 return courseResp;
             }).toList());
+
+            mediaRepository.findById(coursePacks.getCover()).ifPresent(media -> {
+                resp.setCoverUrl(media.getUrl());
+                resp.setCoverFileName(media.getFileName());
+            });
             return resp;
         }
         return null;

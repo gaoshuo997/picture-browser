@@ -28,12 +28,14 @@ public class PublicMediaController {
     @GetMapping("/media/list")
     public Result<PaginatedApiResult<MediaResp>> list(
             @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
-            @RequestParam(value = "pageSize", required = false, defaultValue = "20") Integer size){
+            @RequestParam(value = "pageSize", required = false, defaultValue = "20") Integer size,
+            @RequestParam(value = "fileName",required = false) String fileName){
         page = page >= 1 ? page : 1;
 
         // 公共接口只能获取最大20条图片
         size = 0 <= size && size <= 20 ? size : 20;
-        PaginatedApiResult<MediaResp> pageResult = mediaUploadService.publicList(page, size, MediaType.IMAGE.toString());
+        PaginatedApiResult<MediaResp> pageResult = mediaUploadService.publicList(page, size,
+                MediaType.IMAGE.toString(), fileName);
         return Result.success(pageResult);
     }
 

@@ -29,6 +29,7 @@ import org.springframework.data.redis.core.ExpireChanges;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import lombok.extern.slf4j.Slf4j;
 import java.time.Duration;
@@ -79,13 +80,14 @@ public class MediaUploadServiceImpl implements MediaUploadService {
     }
 
     @Override
-    public PaginatedApiResult<MediaResp> list(Integer page, Integer size, String type) {
+    public PaginatedApiResult<MediaResp> list(Integer page, Integer size, String type, String fileName) {
         Pageable pageable = PageRequest.of(page - 1, size,
                 Sort.by(Sort.Direction.DESC, PredicateFieldName.ID.getName()));
         MediaReq req = new MediaReq();
         if (type != null && !type.isEmpty()){
             req.setMediaType(type);
         }
+        req.setFileName(fileName);
         Specification<Media> mediaSpecification = buildSpecification(req);
         Page<Media> pageList = mediaRepository.findAll(mediaSpecification, pageable);
 
@@ -135,8 +137,8 @@ public class MediaUploadServiceImpl implements MediaUploadService {
     }
 
     @Override
-    public PaginatedApiResult<MediaResp> publicList(Integer page, Integer size, String type) {
-        return this.list(page,size, type);
+    public PaginatedApiResult<MediaResp> publicList(Integer page, Integer size, String type,String fileName) {
+        return this.list(page,size, type, fileName);
     }
 
     @Override
@@ -203,6 +205,12 @@ public class MediaUploadServiceImpl implements MediaUploadService {
             }
             if (SecurityUtils.getCurrentUserId() != null){
                 predicates.add(cb.equal(root.get(PredicateFieldName.USER_ID.getName()), SecurityUtils.getCurrentUserId()));
+            }
+            if (StringUtils.hasText(req.getFileName())){
+                String safeName = req.getFileName().trim();
+                // 转义特殊字符 % 和 _，防止用户输入干扰模糊匹配逻辑
+                safeName = safeName.replace("\\", "\\\\");
+                predicates.add(cb.like(root.get(PredicateFieldName.FILE_NAME.getName()),cb.literal(safeName + "%")));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };

@@ -1,8 +1,8 @@
 package com.jimmy.filter;
 
 import com.jimmy.common.exception.ErrorMsg;
-import com.jimmy.common.result.BusinessException;
 import com.jimmy.jwt.JwtTokenProvider;
+import com.jimmy.security.JwtAuthenticationEntryPoint;
 import com.jimmy.service.BlacklistService;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Resource;
@@ -11,6 +11,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -40,6 +42,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Resource
     private BlacklistService blacklistService;
 
+    @Resource
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+
     /**
      * 过滤器核心方法
      * 从请求头中提取 JWT Token，验证并设置认证信息到 SecurityContext
@@ -63,14 +68,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // 检查用户是否进入黑名单
             if (blacklistService.isBlacklisted(jwt)){
-                throw new BusinessException(ErrorMsg.EXIST_IN_BLACKLIST.getMsg());
+                log.warn("JWT Token 在黑名单中 - URI: {}, Token: {}", requestURI, jwt);
+                jwtAuthenticationEntryPoint.commence(request,response,
+                        new AuthenticationCredentialsNotFoundException(ErrorMsg.EXIST_IN_BLACKLIST.getMsg()));
+                return;
             }
 
             if (!jwtTokenProvider.validateToken(jwt)){
                 log.warn("JWT Token 验证失败");
                 // 这里可以抛异常，或者直接返回 401 JSON
-                // 建议直接写入响应并返回，避免抛出 ServletException 导致进入容器错误页
-                throw new BusinessException(ErrorMsg.TOKEN_CHECK_ERROR.getMsg());
+                jwtAuthenticationEntryPoint.commence(request, response,
+                        new BadCredentialsException(ErrorMsg.TOKEN_CHECK_ERROR.getMsg()));
+                return;
             }
 
             // 3.1 从 Token 中提取用户ID
@@ -105,12 +114,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
         } catch (Exception e) {
-            // 捕获所有异常，记录错误日志
-            log.error("JWT 认证过滤器处理异常: {}", e.getMessage(), e);
-            // 清除安全上下文，防止残留认证信息
-            SecurityContextHolder.clearContext();
+            log.error("Could not set user authentication in security context", e);
+            // 捕获所有未知异常，统一交给 entryPoint 处理，防止暴露堆栈
+            jwtAuthenticationEntryPoint.commence(request, response,
+                    new AuthenticationCredentialsNotFoundException(ErrorMsg.TOKEN_CHECK_ERROR.getMsg(), e));
         }
-
         // 4. 继续过滤器链
         // 无论认证成功或失败，都将请求传递给下一个过滤器
         filterChain.doFilter(request, response);

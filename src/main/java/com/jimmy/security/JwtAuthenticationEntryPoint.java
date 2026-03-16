@@ -3,7 +3,6 @@ package com.jimmy.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jimmy.common.result.Result;
 import com.jimmy.common.result.ResultCode;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +31,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request,
                         HttpServletResponse response,
-                        AuthenticationException authException) throws IOException, ServletException {
+                        AuthenticationException authException) throws IOException {
         // 记录认证失败日志
         log.warn("认证失败 - URI: {}, 错误信息: {}",
                 request.getRequestURI(),
@@ -46,7 +45,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
         // 构建统一响应结果
-        Result<?> result = Result.failed(ResultCode.UNAUTHORIZED,ResultCode.UNAUTHORIZED.getMessage());
+        Result<?> result = Result.failed(ResultCode.UNAUTHORIZED, authException.getMessage());
 
         // 将结果写入响应输出流
         objectMapper.writeValue(response.getOutputStream(), result);

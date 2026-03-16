@@ -1,6 +1,7 @@
 package com.jimmy.req;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -14,8 +15,8 @@ public class CoursePacksSave {
     @Size(min = 2, max = 60, message = "描述长度必须在{min}~{max}个字符之间")
     private String description;
 
-    @NotBlank(message = "封面不能为空")
-    private String cover;
+    @NotNull(message = "封面不能为空")
+    private Long cover;
 
     @NotBlank(message = "封面图片文件名不能为空")
     private String coverFileName;

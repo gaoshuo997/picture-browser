@@ -46,7 +46,7 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 
         // 构建统一响应结果
-        Result<?> result = Result.failed(ResultCode.FORBIDDEN,ResultCode.FORBIDDEN.getMessage());
+        Result<?> result = Result.failed(ResultCode.FORBIDDEN,accessDeniedException.getMessage());
 
         // 将结果写入响应输出流
         objectMapper.writeValue(response.getOutputStream(), result);

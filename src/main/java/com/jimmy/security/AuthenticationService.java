@@ -8,6 +8,7 @@ import com.jimmy.entity.enums.RedisKeyName;
 import com.jimmy.jwt.JwtTokenProvider;
 import com.jimmy.req.LoginUserReq;
 import com.jimmy.req.SignUserSave;
+import com.jimmy.service.BlacklistService;
 import com.jimmy.service.SignUserService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +38,9 @@ public class AuthenticationService {
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private BlacklistService blacklistService;
 
     /**
      * 用户登录
@@ -116,5 +121,24 @@ public class AuthenticationService {
                     ,BadReqExceptionMsg.REGISTER_ERROR.getMessage());
         }
 
+    }
+
+    /**
+     * 用户登出
+     * @param id 用户ID
+     */
+    public void logout(Long id){
+        String token = stringRedisTemplate.opsForValue().get(RedisKeyName.SIGN_USER_TOKEN_PREFIX.getName() + id);
+        if (!jwtTokenProvider.validateToken(token)){
+            return;
+        }
+
+        if (StringUtils.hasText(token)){
+            long jwtRemainingTime = jwtTokenProvider.getJwtRemainingTime(token);
+            if (jwtRemainingTime > 0){
+                blacklistService.addToBlacklist(token,jwtRemainingTime);
+                log.info("用户:{}退出登录", id);
+            }
+        }
     }
 }

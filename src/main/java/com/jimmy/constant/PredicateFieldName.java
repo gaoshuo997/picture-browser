@@ -17,7 +17,8 @@ public enum PredicateFieldName {
     ORDER("order"),
     DELETE_FLAG("deleteFlag"),
     MEDIA_TYPE("mediaType"),
-    STATUS("status");
+    STATUS("status"),
+    FILE_NAME("fileName");
 
     private final String name;
     PredicateFieldName(String name) {

@@ -49,10 +49,11 @@ public class MediaController {
             @Pattern(regexp = "IMAGE|VIDEO", message = "媒体类型错误")
             @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
-            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer size){
+            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer size,
+            @RequestParam(value = "fileName", required = false) String fileName){
         page = page >= 1 ? page : 1;
         size = size >= 0 ? size : 10;
-        PaginatedApiResult<MediaResp> pageResult = mediaUploadService.list(page, size, type);
+        PaginatedApiResult<MediaResp> pageResult = mediaUploadService.list(page, size, type, fileName);
         return Result.success(pageResult);
     }
 

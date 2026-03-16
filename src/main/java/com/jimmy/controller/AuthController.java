@@ -57,15 +57,13 @@ public class AuthController {
 
     /**
      * 用户登出
-     *
-     * @param request HTTP 请求
      * @return 登出结果
      */
     @PostMapping("/logout")
-    public Result<?> logout(HttpServletRequest request) {
-        log.info("用户登出");
+    public Result<?> logout() {
+        authenticationService.logout(SecurityUtils.getCurrentUserId());
         SecurityUtils.clearContext();
-        return Result.successWithMessage("退出登录成功");
+        return Result.success();
     }
 
     /**

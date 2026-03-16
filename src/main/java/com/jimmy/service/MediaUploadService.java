@@ -10,13 +10,13 @@ public interface MediaUploadService {
 
     MediaResp uploadImage(MultipartFile multipartFile);
 
-    PaginatedApiResult<MediaResp> list(Integer page, Integer size, String type);
+    PaginatedApiResult<MediaResp> list(Integer page, Integer size, String type, String fileName);
 
     MediaResp getDetail(Long id);
 
     Media saveMediaRecord(MediaReq mediaReq);
 
-    PaginatedApiResult<MediaResp> publicList(Integer page, Integer size, String type);
+    PaginatedApiResult<MediaResp> publicList(Integer page, Integer size, String type, String fileName);
 
     Media updateMediaRecord(MediaReq mediaReq);
 

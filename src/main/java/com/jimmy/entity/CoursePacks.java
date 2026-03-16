@@ -23,11 +23,8 @@ public class CoursePacks {
     @Column(name = "is_free")
     private Boolean free;
 
-    @Column(name = "cover", length = 2048, nullable = false)
-    private String cover;
-
-    @Column(name = "cover_file_name", nullable = false)
-    private String coverFileName;
+    @Column(name = "cover", nullable = false)
+    private Long cover;
 
     @Column(name = "creator_id", nullable = false)
     private Long creatorId;

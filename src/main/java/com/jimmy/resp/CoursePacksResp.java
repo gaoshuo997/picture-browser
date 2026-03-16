@@ -14,9 +14,11 @@ public class CoursePacksResp {
 
     private Boolean free;
 
-    private String cover;
+    private Long cover;
 
     private String coverFileName;
+
+    private String coverUrl;
 
     private List<CourseResp> courses;
 

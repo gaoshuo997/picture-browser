@@ -236,8 +236,10 @@ public class SignUserServiceImpl implements SignUserService {
             String token = stringRedisTemplate.opsForValue().get(RedisKeyName.SIGN_USER_TOKEN_PREFIX.getName() + id);
             if (StringUtils.hasText(token)){
                 long jwtRemainingTime = jwtTokenProvider.getJwtRemainingTime(token);
-                blacklistService.addToBlacklist(token,jwtRemainingTime);
-                log.info("用户:{}已被踢下线，token已加入黑名单", signUser.getLoginName());
+                if (jwtRemainingTime > 0){
+                    blacklistService.addToBlacklist(token,jwtRemainingTime);
+                    log.info("用户:{}已被踢下线，token已加入黑名单", signUser.getLoginName());
+                }
             }
         }else {
             signUser.setStatus(StatusFlag.VALID.getFlag());
