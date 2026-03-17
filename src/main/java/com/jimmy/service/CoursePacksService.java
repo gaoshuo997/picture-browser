@@ -1,13 +1,12 @@
 package com.jimmy.service;
 
+import com.jimmy.common.PaginatedApiResult;
 import com.jimmy.req.CoursePacksSave;
 import com.jimmy.resp.CoursePacksResp;
 
-import java.util.List;
-
 public interface CoursePacksService {
 
-    List<CoursePacksResp> list();
+    PaginatedApiResult<CoursePacksResp> list(Integer page, Integer size);
 
     CoursePacksResp fetch(Long id);
 

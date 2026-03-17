@@ -1,10 +1,10 @@
 package com.jimmy.repository;
 
 import com.jimmy.entity.UserCourseProgress;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 @Repository
 public interface UserCourseProgressRepository extends JpaRepository<UserCourseProgress, Long> {
@@ -12,5 +12,5 @@ public interface UserCourseProgressRepository extends JpaRepository<UserCoursePr
 
     UserCourseProgress findFirstByCoursePackIdAndUserIdAndCourseId(Long coursePackId, Long userId, Long courseId);
 
-    List<UserCourseProgress> findAllByUserId(Long userId);
+    Page<UserCourseProgress> findByUserId(Long userId,Pageable pageable);
 }

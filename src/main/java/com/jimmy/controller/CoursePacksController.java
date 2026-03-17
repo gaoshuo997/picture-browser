@@ -1,5 +1,6 @@
 package com.jimmy.controller;
 
+import com.jimmy.common.PaginatedApiResult;
 import com.jimmy.common.result.Result;
 import com.jimmy.req.CoursePacksSave;
 import com.jimmy.resp.CoursePacksResp;
@@ -7,8 +8,6 @@ import com.jimmy.service.CoursePacksService;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * 课程包管理接口
@@ -25,8 +24,13 @@ public class CoursePacksController {
      * @return 返回课程包列表
      */
     @GetMapping("/list")
-    public Result<List<CoursePacksResp>> getList() {
-        List<CoursePacksResp> list = coursePacksService.list();
+    public Result<PaginatedApiResult<CoursePacksResp>> getList(
+            @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") Integer size) {
+
+        page = page >= 1 ? page : 1;
+        size = size >= 0 ? size : 10;
+        PaginatedApiResult<CoursePacksResp> list = coursePacksService.list(page, size);
         return Result.success(list);
     }
 

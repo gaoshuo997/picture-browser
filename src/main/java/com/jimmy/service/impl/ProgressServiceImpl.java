@@ -1,14 +1,22 @@
 package com.jimmy.service.impl;
 
+import com.jimmy.common.PaginatedApiResult;
+import com.jimmy.constant.PredicateFieldName;
 import com.jimmy.entity.Courses;
 import com.jimmy.entity.UserCourseProgress;
+import com.jimmy.entity.dto.CourseStateCountDTO;
 import com.jimmy.repository.CoursesRepository;
 import com.jimmy.repository.UserCourseProgressRepository;
 import com.jimmy.resp.LearningProgressResp;
+import com.jimmy.security.SecurityUtils;
 import com.jimmy.service.ProgressService;
 import com.jimmy.utils.DateUtils;
 import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -25,24 +33,40 @@ public class ProgressServiceImpl implements ProgressService {
     private CoursesRepository coursesRepository;
 
     @Override
-    public List<LearningProgressResp> getProgressList(Long userId) {
-        List<UserCourseProgress> allByUserId = progressRepository.findAllByUserId(userId);
-        if (allByUserId != null && !allByUserId.isEmpty()){
-            List<LearningProgressResp> respList = new ArrayList<>(allByUserId.size());
-            Set<Long> courseIdByProgress = allByUserId.stream().map(UserCourseProgress::getCourseId).collect(Collectors.toSet());
-            List<Courses> allCourseById = coursesRepository.findAllById(courseIdByProgress);
+    public PaginatedApiResult<LearningProgressResp> getProgressList(Integer page, Integer size) {
 
-            for (UserCourseProgress userCourseProgress : allByUserId) {
-                LearningProgressResp resp = new LearningProgressResp();
-                BeanUtils.copyProperties(userCourseProgress, resp);
-                allCourseById.stream().filter(course -> course.getId()
-                                .equals(userCourseProgress.getCourseId()))
-                        .findFirst().ifPresent(course -> resp.setCourseTitle(course.getTitle()));
-                resp.setLastStudyAt(DateUtils.format(userCourseProgress.getUpdatedAt(), DateUtils.DATETIME_FORMAT));
-                respList.add(resp);
-            }
-            return respList;
+        Pageable pageable = PageRequest.of(page - 1, size,
+                Sort.by(Sort.Direction.ASC, PredicateFieldName.CREATED_AT.getName()));
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+        Page<UserCourseProgress> pageList = progressRepository.findByUserId(currentUserId,pageable);
+        if (pageList.isEmpty()){
+            return new PaginatedApiResult<>(pageable.getPageNumber(),pageable.getPageSize(),
+                    0,0L, new ArrayList<>(),0);
         }
-        return List.of();
+
+        List<LearningProgressResp> respList = new ArrayList<>(pageList.getSize());
+        Set<Long> courseIdByProgress = pageList.stream().map(UserCourseProgress::getCourseId)
+                .collect(Collectors.toSet());
+        List<Courses> allCourseById = coursesRepository.findAllById(courseIdByProgress);
+
+        List<CourseStateCountDTO> countStatementByCourse = coursesRepository
+                .countStatementPreCourse(allCourseById.stream().map(Courses::getId).toList());
+
+        for (UserCourseProgress userCourseProgress : pageList) {
+            LearningProgressResp resp = new LearningProgressResp();
+            BeanUtils.copyProperties(userCourseProgress, resp);
+            allCourseById.stream().filter(course -> course.getId()
+                            .equals(userCourseProgress.getCourseId()))
+                    .findFirst().ifPresent(course -> resp.setCourseTitle(course.getTitle()));
+            resp.setLastStudyAt(DateUtils.format(userCourseProgress.getUpdatedAt(), DateUtils.DATETIME_FORMAT));
+            resp.setCountStatementByCourse(countStatementByCourse.stream()
+                    .filter(c -> c.getCourseId().equals(resp.getCourseId()))
+                    .findFirst().orElse(new CourseStateCountDTO()).getStatementCount());
+            respList.add(resp);
+        }
+        return new PaginatedApiResult<>(pageable.getPageNumber(),pageable.getPageSize(),
+                respList.size(),pageList.getTotalElements(),
+                respList,pageList.getTotalPages());
+
     }
 }

@@ -30,7 +30,7 @@ public class RoleController {
     @GetMapping("/page")
     public Result<PaginatedApiResult<RoleResp>> list(
             @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
-            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer size) {
+            @RequestParam(value = "size", required = false, defaultValue = "10") Integer size) {
 
         page = page >= 1 ? page : 1;
         size = size >= 0 ? size : 10;

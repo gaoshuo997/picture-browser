@@ -1,24 +1,26 @@
 package com.jimmy.service.impl;
 
+import com.jimmy.common.PaginatedApiResult;
 import com.jimmy.common.result.BusinessException;
 import com.jimmy.constant.PredicateFieldName;
 import com.jimmy.entity.*;
 import com.jimmy.repository.*;
 import com.jimmy.req.CoursePacksSave;
 import com.jimmy.resp.CoursePacksResp;
-import com.jimmy.resp.CourseResp;
 import com.jimmy.service.CoursePacksService;
 import com.jimmy.utils.DateUtils;
 import jakarta.annotation.Resource;
 import com.jimmy.security.SecurityUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional(rollbackFor = Exception.class)
@@ -29,20 +31,21 @@ public class CoursePacksServiceImpl implements CoursePacksService {
     @Resource
     private CoursesRepository coursesRepository;
     @Resource
-    private CourseHistoryRepository courseHistoryRepository;
-    @Resource
-    private StatementsRepository statementsRepository;
-    @Resource
     private MediaRepository mediaRepository;
 
     @Override
-    public List<CoursePacksResp> list() {
-        Sort sortByCreateAt = Sort.by(Sort.Direction.ASC, PredicateFieldName.CREATED_AT.getName());
-        List<CoursePacks> all = coursePacksRepository.findAll(sortByCreateAt);
+    public PaginatedApiResult<CoursePacksResp> list(Integer page, Integer size) {
+        Pageable pageable = PageRequest.of(page - 1, size,
+                Sort.by(Sort.Direction.ASC, PredicateFieldName.CREATED_AT.getName()));
+        Page<CoursePacks> pageList = coursePacksRepository.findAll(pageable);
 
-        List<Media> allMediaById = mediaRepository.findAllById(all.stream().map(CoursePacks::getCover).toList());
-        List<CoursePacksResp> result = new ArrayList<>();
-        for (CoursePacks coursePacks : all) {
+        if (pageList.isEmpty()) {
+            return new PaginatedApiResult<>(page, size, 0, 0L, Collections.emptyList(), 0);
+        }
+
+        List<Media> allMediaById = mediaRepository.findAllById(pageList.stream().map(CoursePacks::getCover).toList());
+        List<CoursePacksResp> respList = new ArrayList<>();
+        for (CoursePacks coursePacks : pageList) {
             CoursePacksResp resp = new CoursePacksResp();
             BeanUtils.copyProperties(coursePacks,resp);
             resp.setCourseCount(coursesRepository.countByCoursePackId(coursePacks.getId()));
@@ -53,9 +56,11 @@ public class CoursePacksServiceImpl implements CoursePacksService {
                 resp.setCoverUrl(first.get().getUrl());
                 resp.setCoverFileName(first.get().getFileName());
             }
-            result.add(resp);
+            respList.add(resp);
         }
-        return result;
+        return new PaginatedApiResult<>(pageable.getPageNumber(),pageable.getPageSize(),
+                respList.size(),pageList.getTotalElements(),
+                respList,pageList.getTotalPages());
     }
 
     @Override
@@ -66,28 +71,6 @@ public class CoursePacksServiceImpl implements CoursePacksService {
             CoursePacksResp resp = new CoursePacksResp();
             BeanUtils.copyProperties(coursePacks, resp);
             resp.setCreatedAt(DateUtils.format(coursePacks.getCreatedAt(),DateUtils.DATE_FORMAT));
-
-            // 根据课程包获取课程表
-            List<Courses> coursesByCoursePackId = coursesRepository.findByCoursePackIdOrderByOrderAsc(coursePacks.getId());
-
-            // 根据课程包获取用户历史学习记录
-            List<CourseHistory> historyByCoursePackId = courseHistoryRepository.findByCoursePackId(coursePacks.getId());
-            // 根据课程包获取句子
-            List<Statements> statementsList = statementsRepository.findByCourseIdIn(coursesByCoursePackId.stream()
-                    .map(Courses::getId).toList());
-
-            Map<Long, List<Statements>> statementGroup = statementsList.stream()
-                    .collect(Collectors.groupingBy(Statements::getCourseId));
-
-            resp.setCourses(coursesByCoursePackId.stream().map(course -> {
-                CourseResp courseResp = new CourseResp();
-                BeanUtils.copyProperties(course, courseResp);
-                courseResp.setCoursePackId(coursePacks.getId());
-                Optional<CourseHistory> first = historyByCoursePackId.stream().filter(history -> history.getCourseId().equals(course.getId())).findFirst();
-                courseResp.setCompletionCount(first.map(CourseHistory::getCompletionCount).orElse(0));
-                courseResp.setStatementCount(statementGroup.get(course.getId()).size());
-                return courseResp;
-            }).toList());
 
             mediaRepository.findById(coursePacks.getCover()).ifPresent(media -> {
                 resp.setCoverUrl(media.getUrl());

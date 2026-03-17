@@ -32,7 +32,7 @@ public class SignUserController {
     @GetMapping("/page")
     public Result<PaginatedApiResult<SignUserResp>> list(
             @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
-            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer size,
+            @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
             @RequestParam(value = "loginName", required = false) String loginName,
             @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
             @RequestParam(value = "createTimeStart", required = false) LocalDateTime startDate,

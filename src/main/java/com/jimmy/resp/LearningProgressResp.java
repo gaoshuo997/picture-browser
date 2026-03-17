@@ -22,4 +22,6 @@ public class LearningProgressResp {
     private String lastStudyAt;
 
     private List<Long> completedStatement;
+
+    private Long countStatementByCourse;
 }

@@ -1,10 +1,9 @@
 package com.jimmy.service;
 
+import com.jimmy.common.PaginatedApiResult;
 import com.jimmy.resp.LearningProgressResp;
-
-import java.util.List;
 
 public interface ProgressService {
 
-    List<LearningProgressResp> getProgressList(Long userId);
+    PaginatedApiResult<LearningProgressResp> getProgressList(Integer page, Integer size);
 }
